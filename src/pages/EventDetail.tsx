@@ -219,8 +219,17 @@ const EventDetail = () => {
       description: `${quantity} ${tier?.name} tickets at $${tier?.price} each`,
     });
     
-    // Navigate to checkout page with query parameters
-    navigate(`/checkout?eventId=${eventId}&tier=${selectedTier}&quantity=${quantity}`);
+    // Navigate to checkout page with state instead of query parameters
+    navigate('/checkout', { 
+      state: {
+        eventId: eventId,
+        eventTitle: event.title,
+        tierName: tier?.name,
+        tierPrice: tier?.price,
+        quantity: quantity,
+        totalPrice: (tier?.price || 0) * quantity * 1.1
+      }
+    });
   };
 
   if (isLoading) {
