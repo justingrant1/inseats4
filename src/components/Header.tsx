@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, TicketIcon } from "lucide-react";
+import { Menu, X, TicketIcon, ShoppingCart } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Header = () => {
@@ -27,7 +27,7 @@ const Header = () => {
       <div className="container mx-auto px-4 flex items-center justify-between h-16 md:h-20">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <span className="text-xl md:text-2xl font-display font-bold">EventCast</span>
+          <span className="text-xl md:text-2xl font-display font-bold text-blue-600">InSeats</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -42,19 +42,27 @@ const Header = () => {
             <TicketIcon className="mr-1 h-4 w-4" />
             Sell Tickets
           </Link>
+          <Link to="/checkout" className="ml-4 relative">
+            <ShoppingCart className="h-5 w-5 text-foreground hover:text-gold-500" />
+          </Link>
           <Button className="ml-4" variant="default" size="sm">
             Sign In
           </Button>
         </nav>
 
         {/* Mobile menu button */}
-        <button
-          className="md:hidden p-2"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="md:hidden flex items-center gap-4">
+          <Link to="/checkout" className="relative">
+            <ShoppingCart className="h-5 w-5 text-foreground hover:text-gold-500" />
+          </Link>
+          <button
+            className="p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation */}
