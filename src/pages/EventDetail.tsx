@@ -64,6 +64,7 @@ type SeatTier = {
   price: number;
   availableSeats: number;
   color: string;
+  bgColor: string;
 };
 
 const EventDetail = () => {
@@ -83,6 +84,7 @@ const EventDetail = () => {
       price: 450,
       availableSeats: 12,
       color: "bg-amber-500",
+      bgColor: "bg-amber-100",
     },
     {
       id: "premium",
@@ -91,6 +93,7 @@ const EventDetail = () => {
       price: 250,
       availableSeats: 28,
       color: "bg-purple-500",
+      bgColor: "bg-purple-100",
     },
     {
       id: "standard",
@@ -99,6 +102,7 @@ const EventDetail = () => {
       price: 150,
       availableSeats: 64,
       color: "bg-blue-500",
+      bgColor: "bg-blue-100",
     },
     {
       id: "budget",
@@ -107,6 +111,7 @@ const EventDetail = () => {
       price: 85,
       availableSeats: 103,
       color: "bg-green-500",
+      bgColor: "bg-green-100",
     },
   ];
 
@@ -292,44 +297,36 @@ const EventDetail = () => {
                     </div>
                   </div>
                   
-                  {/* Enhanced seat map visualization - FIXED */}
+                  {/* Redesigned seat map to match the image */}
                   <h3 className="text-xl font-semibold mb-4">Seat Map</h3>
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="relative w-full h-64 border border-gray-200 rounded bg-white overflow-hidden">
+                  <div className="bg-white border border-gray-200 rounded-lg p-2 mb-4">
+                    <div className="relative w-full overflow-hidden">
                       {/* Stage/Field indication */}
-                      <div className="absolute top-0 left-0 right-0 bg-gray-800 text-white text-center py-2">
+                      <div className="bg-gray-800 text-white text-center py-2 mb-2">
                         Stage / Field
                       </div>
                       
-                      {/* Simplified seating sections with improved focus handling */}
-                      <div className="absolute top-12 left-4 right-4 bottom-4 flex flex-col gap-2">
-                        {seatTiers.map((tier) => {
-                          // Determine the specific color classes instead of dynamic class names
-                          const baseColorClass = tier.color; // e.g. "bg-amber-500"
-                          
-                          // Create focused and hover variations with hardcoded classes
-                          const focusedClass = mapFocus === tier.id 
-                            ? `${baseColorClass} bg-opacity-40 border-2 shadow-md` 
-                            : `${baseColorClass} bg-opacity-20 hover:bg-opacity-30`;
-                            
-                          return (
-                            <div 
-                              key={tier.id}
-                              className={`flex-1 cursor-pointer border rounded flex items-center justify-center transition-all duration-300 ${focusedClass}`}
-                              onClick={() => handleTierSelect(tier.id)}
-                            >
-                              <div className="font-semibold flex items-center">
-                                {mapFocus === tier.id && <Check className="h-4 w-4 mr-1" />}
-                                <span>{tier.name}</span>
-                                {mapFocus === tier.id && <span className="ml-2 text-sm">${tier.price}</span>}
-                              </div>
+                      {/* Seating sections */}
+                      <div className="flex flex-col gap-2">
+                        {seatTiers.map((tier) => (
+                          <div 
+                            key={tier.id}
+                            className={`cursor-pointer rounded py-2 text-center transition-all ${
+                              selectedTier === tier.id ? `${tier.bgColor} border-2 border-${tier.color.replace('bg-', '')}` : tier.bgColor
+                            }`}
+                            onClick={() => handleTierSelect(tier.id)}
+                          >
+                            <div className="font-medium flex items-center justify-center">
+                              {selectedTier === tier.id && <Check className="h-4 w-4 mr-1" />}
+                              {tier.name}
+                              {selectedTier === tier.id && <span className="ml-2 text-sm">${tier.price}</span>}
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
                     
-                    <div className="mt-4 text-sm text-muted-foreground">
+                    <div className="mt-4 text-sm text-muted-foreground text-center">
                       Click on a seating tier to select and see more details.
                     </div>
                   </div>
@@ -359,22 +356,22 @@ const EventDetail = () => {
                     <h3 className="font-semibold">Select Seating Tier:</h3>
                     
                     {seatTiers.map((tier) => {
-                      // Fixed styling for tiers
-                      const selectedClass = selectedTier === tier.id 
-                        ? `border-2 ${tier.color} bg-opacity-20` 
-                        : 'border-gray-200 hover:border-gray-300';
-                        
+                      const isSelected = selectedTier === tier.id;
+                      const dotColorClass = tier.color.replace('bg-', 'bg-');
+                      
                       return (
                         <div 
                           key={tier.id}
-                          className={`border rounded-lg p-4 cursor-pointer transition-all ${selectedClass}`}
+                          className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                            isSelected ? `border-2 border-${tier.color.replace('bg-', '')} bg-opacity-10` : 'border-gray-200 hover:border-gray-300'
+                          }`}
                           onClick={() => handleTierSelect(tier.id)}
                         >
                           <div className="flex justify-between items-center mb-1">
                             <div className="font-medium flex items-center">
-                              <div className={`w-3 h-3 rounded-full ${tier.color} mr-2`}></div>
+                              <div className={`w-3 h-3 rounded-full ${dotColorClass} mr-2`}></div>
                               {tier.name}
-                              {selectedTier === tier.id && <Check className="h-4 w-4 ml-1 text-green-500" />}
+                              {isSelected && <Check className="h-4 w-4 ml-1 text-green-500" />}
                             </div>
                             <div className="font-bold text-lg">${tier.price}</div>
                           </div>
@@ -389,7 +386,7 @@ const EventDetail = () => {
                     })}
                   </div>
                   
-                  {/* Fixed dropdown styling */}
+                  {/* Improved select dropdown for quantity */}
                   <div className="mb-6">
                     <label htmlFor="quantity" className="block font-semibold mb-2">
                       Quantity:
@@ -399,7 +396,7 @@ const EventDetail = () => {
                       onValueChange={handleQuantityChange}
                     >
                       <SelectTrigger className="w-full border border-gray-300 bg-white">
-                        <SelectValue placeholder="Select quantity" />
+                        <SelectValue placeholder={`${quantity} Ticket${quantity > 1 ? 's' : ''}`} />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
