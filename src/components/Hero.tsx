@@ -1,0 +1,105 @@
+
+import { useState } from "react";
+import { Search, Calendar, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
+
+const Hero = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const navigate = useNavigate();
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate(`/events?search=${searchQuery}&category=${category}`);
+  };
+
+  return (
+    <div className="relative min-h-[90vh] flex items-center justify-center hero-gradient">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-[20%] left-[10%] w-64 h-64 bg-gold-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-[10%] right-[15%] w-80 h-80 bg-gold-500/5 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="animate-slide-in">
+            <span className="inline-block py-1 px-3 rounded-full bg-gold-500/20 text-gold-500 text-sm font-medium mb-6 backdrop-blur-sm">
+              Premium Seating Marketplace
+            </span>
+            
+            <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+              InSeats: Your Ticket to the 
+              <span className="bg-clip-text text-transparent gold-gradient block md:ml-2 md:inline-block">
+                Best Views
+              </span>
+            </h1>
+            
+            <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
+              Experience events from the best seats in the house. Find last-minute premium tickets for concerts, sports, and theater events.
+            </p>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-lg max-w-3xl mx-auto animate-fade-in delay-300 border border-white/20">
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
+                <Input
+                  type="text"
+                  placeholder="Search events, artists, teams..."
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-12"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <div className="w-full md:w-48">
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white h-12">
+                    <div className="flex items-center">
+                      <Calendar className="mr-2 h-4 w-4 text-gold-500" />
+                      <SelectValue placeholder="Category" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/20">
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="concerts">Concerts</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="theater">Theater</SelectItem>
+                    <SelectItem value="comedy">Comedy</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button type="submit" className="bg-gold-500 hover:bg-gold-600 text-black h-12">
+                Find Seats
+              </Button>
+            </form>
+          </div>
+          
+          <div className="mt-8 flex items-center justify-center gap-6 text-white/80 text-sm animate-fade-in delay-500">
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-1.5 text-gold-500" />
+              <span>Last-minute deals</span>
+            </div>
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 mr-1.5 text-gold-500" />
+              <span>Best seats guaranteed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Hero;
