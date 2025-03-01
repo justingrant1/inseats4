@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, Check } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
@@ -69,7 +70,6 @@ type SeatTier = {
 
 const EventDetail = () => {
   const { eventId } = useParams<{ eventId: string }>();
-  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -164,22 +164,10 @@ const EventDetail = () => {
     }
 
     const tier = seatTiers.find(t => t.id === selectedTier);
-    if (!tier || !event) return;
-
-    // Calculate the total price including service fee (10%)
-    const subtotal = tier.price * quantity;
-    const totalPrice = subtotal * 1.1;
-
-    // Instead of just showing a toast, navigate to the checkout page
-    navigate('/checkout', { 
-      state: {
-        eventId: event.id,
-        eventTitle: event.title,
-        tierName: tier.name,
-        tierPrice: tier.price,
-        quantity: quantity,
-        totalPrice: totalPrice
-      }
+    
+    toast({
+      title: "Tickets purchased!",
+      description: `${quantity} ${tier?.name} tickets at $${tier?.price} each`,
     });
   };
 
@@ -321,15 +309,11 @@ const EventDetail = () => {
                           <div 
                             key={tier.id}
                             className={`cursor-pointer rounded py-2 text-center transition-all ${
-                              selectedTier === tier.id ? `${tier.bgColor} border-2 border-${tier.color.replace('bg-', '')}` : tier.bgColor
+                              mapFocus === tier.id ? tier.bgColor : 'bg-gray-50'
                             }`}
                             onClick={() => handleTierSelect(tier.id)}
                           >
-                            <div className="font-medium flex items-center justify-center">
-                              {selectedTier === tier.id && <Check className="h-4 w-4 mr-1" />}
-                              {tier.name}
-                              {selectedTier === tier.id && <span className="ml-2 text-sm">${tier.price}</span>}
-                            </div>
+                            <div className="font-medium">{tier.name}</div>
                           </div>
                         ))}
                       </div>
@@ -372,7 +356,7 @@ const EventDetail = () => {
                         <div 
                           key={tier.id}
                           className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                            isSelected ? `border-2 border-${tier.color.replace('bg-', '')} bg-opacity-10` : 'border-gray-200 hover:border-gray-300'
+                            isSelected ? 'border-2 border-gold-500 bg-gold-50' : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => handleTierSelect(tier.id)}
                         >
@@ -380,7 +364,6 @@ const EventDetail = () => {
                             <div className="font-medium flex items-center">
                               <div className={`w-3 h-3 rounded-full ${dotColorClass} mr-2`}></div>
                               {tier.name}
-                              {isSelected && <Check className="h-4 w-4 ml-1 text-green-500" />}
                             </div>
                             <div className="font-bold text-lg">${tier.price}</div>
                           </div>
