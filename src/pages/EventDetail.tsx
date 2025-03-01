@@ -1,14 +1,20 @@
-
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Event } from "@/components/EventCard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock event data that would normally come from an API
 const MOCK_EVENTS: Record<string, Event> = {
@@ -66,6 +72,7 @@ const EventDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [mapFocus, setMapFocus] = useState<string | null>(null);
 
   // Seat tier options that would normally be fetched
   const seatTiers: SeatTier[] = [
@@ -117,10 +124,27 @@ const EventDetail = () => {
 
   const handleTierSelect = (tierId: string) => {
     setSelectedTier(tierId);
+    setMapFocus(tierId);
+    
+    const tier = seatTiers.find(t => t.id === tierId);
+    if (tier) {
+      toast({
+        title: `${tier.name} selected`,
+        description: `${tier.availableSeats} seats available at $${tier.price} each`,
+      });
+    }
+    
+    // Animate scroll to purchase section on mobile
+    if (window.innerWidth < 768) {
+      const purchaseSection = document.getElementById('purchase-section');
+      if (purchaseSection) {
+        purchaseSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   };
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setQuantity(parseInt(e.target.value, 10));
+  const handleQuantityChange = (value: string) => {
+    setQuantity(parseInt(value, 10));
   };
 
   const handlePurchase = () => {
@@ -268,7 +292,7 @@ const EventDetail = () => {
                     </div>
                   </div>
                   
-                  {/* Simplified seat map visualization */}
+                  {/* Enhanced seat map visualization */}
                   <h3 className="text-xl font-semibold mb-4">Seat Map</h3>
                   <div className="bg-gray-100 p-4 rounded-lg">
                     <div className="relative w-full h-64 border border-gray-200 rounded bg-white overflow-hidden">
@@ -277,25 +301,30 @@ const EventDetail = () => {
                         Stage / Field
                       </div>
                       
-                      {/* Simplified seating sections */}
+                      {/* Simplified seating sections with improved focus handling */}
                       <div className="absolute top-12 left-4 right-4 bottom-4 flex flex-col gap-2">
-                        <div className="flex-1 bg-gold-500/20 border border-gold-500 rounded flex items-center justify-center">
-                          <span className="font-semibold">VIP Premium</span>
-                        </div>
-                        <div className="flex-1 bg-purple-500/20 border border-purple-500 rounded flex items-center justify-center">
-                          <span className="font-semibold">Premium</span>
-                        </div>
-                        <div className="flex-1 bg-blue-500/20 border border-blue-500 rounded flex items-center justify-center">
-                          <span className="font-semibold">Standard</span>
-                        </div>
-                        <div className="flex-1 bg-green-500/20 border border-green-500 rounded flex items-center justify-center">
-                          <span className="font-semibold">Budget</span>
-                        </div>
+                        {seatTiers.map((tier) => (
+                          <div 
+                            key={tier.id}
+                            className={`flex-1 cursor-pointer border rounded flex items-center justify-center transition-all duration-300 ${
+                              mapFocus === tier.id
+                                ? `bg-${tier.color.split('-')[1]}-500/40 border-${tier.color.split('-')[1]}-600 shadow-md`
+                                : `bg-${tier.color.split('-')[1]}-500/20 border-${tier.color.split('-')[1]}-500 hover:bg-${tier.color.split('-')[1]}-500/30`
+                            }`}
+                            onClick={() => handleTierSelect(tier.id)}
+                          >
+                            <div className="font-semibold flex items-center">
+                              {mapFocus === tier.id && <Check className="h-4 w-4 mr-1" />}
+                              <span>{tier.name}</span>
+                              {mapFocus === tier.id && <span className="ml-2 text-sm">${tier.price}</span>}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                     
                     <div className="mt-4 text-sm text-muted-foreground">
-                      This is a simplified representation. Select a seating tier for more detailed information.
+                      Click on a seating tier to select and see more details.
                     </div>
                   </div>
                 </div>
@@ -303,7 +332,7 @@ const EventDetail = () => {
               
               {/* Right column - Ticket selection */}
               <div>
-                <div className="premium-card p-6 sticky top-6">
+                <div id="purchase-section" className="premium-card p-6 sticky top-6">
                   <div className="flex items-center mb-4">
                     <Ticket className="h-5 w-5 mr-2 text-gold-500" />
                     <h2 className="text-2xl font-bold">Get Tickets</h2>
@@ -337,6 +366,7 @@ const EventDetail = () => {
                           <div className="font-medium flex items-center">
                             <div className={`w-3 h-3 rounded-full ${tier.color} mr-2`}></div>
                             {tier.name}
+                            {selectedTier === tier.id && <Check className="h-4 w-4 ml-1 text-green-500" />}
                           </div>
                           <div className="font-bold text-lg">${tier.price}</div>
                         </div>
@@ -354,18 +384,21 @@ const EventDetail = () => {
                     <label htmlFor="quantity" className="block font-semibold mb-2">
                       Quantity:
                     </label>
-                    <select
-                      id="quantity"
-                      value={quantity}
-                      onChange={handleQuantityChange}
-                      className="w-full border border-gray-300 rounded p-2"
+                    <Select
+                      value={quantity.toString()}
+                      onValueChange={handleQuantityChange}
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                        <option key={num} value={num}>
-                          {num} {num === 1 ? 'Ticket' : 'Tickets'}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select quantity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} {num === 1 ? 'Ticket' : 'Tickets'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   {selectedTier && (
