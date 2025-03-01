@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,7 @@ type SeatTier = {
 
 const EventDetail = () => {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -163,15 +164,23 @@ const EventDetail = () => {
     }
 
     const tier = seatTiers.find(t => t.id === selectedTier);
-    if (!tier) return;
+    if (!tier || !event) return;
 
-    toast({
-      title: "Tickets added to cart!",
-      description: `${quantity} x ${tier.name} tickets for ${event?.title}`,
+    // Calculate the total price including service fee (10%)
+    const subtotal = tier.price * quantity;
+    const totalPrice = subtotal * 1.1;
+
+    // Instead of just showing a toast, navigate to the checkout page
+    navigate('/checkout', { 
+      state: {
+        eventId: event.id,
+        eventTitle: event.title,
+        tierName: tier.name,
+        tierPrice: tier.price,
+        quantity: quantity,
+        totalPrice: totalPrice
+      }
     });
-    
-    // In a real app, this would navigate to checkout
-    console.log(`Purchased ${quantity} ${tier.name} tickets for ${event?.title}`);
   };
 
   if (isLoading) {
