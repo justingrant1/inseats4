@@ -80,7 +80,10 @@ const Hero = () => {
                 </Select>
               </div>
               
-              <Button type="submit" className="bg-gold-500 hover:bg-gold-600 text-black h-12">
+              <Button 
+                type="submit" 
+                className="bg-blue-500 hover:bg-blue-600 text-white h-12 transition-colors"
+              >
                 Find Seats
               </Button>
             </form>
