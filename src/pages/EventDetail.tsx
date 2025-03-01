@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -124,6 +123,7 @@ const EventDetail = () => {
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [mapFocus, setMapFocus] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Seat tier options that would normally be fetched
   const seatTiers: SeatTier[] = [
@@ -215,9 +215,12 @@ const EventDetail = () => {
     const tier = seatTiers.find(t => t.id === selectedTier);
     
     toast({
-      title: "Tickets purchased!",
+      title: "Processing your purchase",
       description: `${quantity} ${tier?.name} tickets at $${tier?.price} each`,
     });
+    
+    // Navigate to checkout page with query parameters
+    navigate(`/checkout?eventId=${eventId}&tier=${selectedTier}&quantity=${quantity}`);
   };
 
   if (isLoading) {
