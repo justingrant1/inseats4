@@ -96,9 +96,8 @@ const LastMinuteDeals = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {deals.map((deal) => (
-              <Link 
+              <div 
                 key={deal.id} 
-                to={`/events/${deal.id}`} 
                 className="block group"
               >
                 <div className="premium-card relative overflow-hidden h-full">
@@ -138,13 +137,15 @@ const LastMinuteDeals = () => {
                         </div>
                       </div>
                       
-                      <Button className="bg-gold-500 hover:bg-gold-600 text-black">
-                        Get Tickets
-                      </Button>
+                      <Link to={`/events/${deal.id}`}>
+                        <Button className="bg-gold-500 hover:bg-gold-600 text-black">
+                          Get Tickets
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
