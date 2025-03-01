@@ -234,12 +234,19 @@ const Checkout = () => {
         description: `You've successfully purchased ${checkoutData?.quantity} tickets for ${checkoutData?.eventTitle}.`,
       });
       
-      // Navigate to a confirmation page or back to event
-      navigate(`/events/${checkoutData?.eventId}`, { 
+      // Generate a random order number
+      const orderNumber = `INS-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
+      
+      // Navigate to confirmation page
+      navigate('/confirmation', { 
         state: { 
-          purchaseComplete: true,
+          orderComplete: true,
+          eventId: checkoutData?.eventId,
+          eventTitle: checkoutData?.eventTitle,
+          tierName: checkoutData?.tierName,
           quantity: checkoutData?.quantity,
-          tierName: checkoutData?.tierName
+          totalPrice: checkoutData?.totalPrice,
+          orderNumber: orderNumber
         }
       });
     }, 2000);
