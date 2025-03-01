@@ -295,10 +295,12 @@ const Checkout = () => {
       
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
-        <main className="flex-1 container mx-auto py-8 px-4">
-          <Link to={`/events/${checkoutData.eventId}`} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Event
-          </Link>
+        <main className="flex-1 container mx-auto py-8 px-4 mt-16">
+          <div className="mb-6">
+            <Link to={`/events/${checkoutData?.eventId}`} className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4 transition-colors">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Event
+            </Link>
+          </div>
           
           {/* Checkout Progress */}
           <div className="mb-8">
@@ -335,7 +337,7 @@ const Checkout = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left column - Order Summary */}
             <div className="lg:col-span-1 lg:order-2">
-              <div className="sticky top-6">
+              <div className="sticky top-24">
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
                   <h2 className="text-xl font-bold mb-4 flex items-center">
                     <ShoppingBag className="h-5 w-5 mr-2 text-blue-500" />

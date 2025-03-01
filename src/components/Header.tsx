@@ -27,7 +27,7 @@ const Header = () => {
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span className="font-display text-2xl font-bold text-white">
-            In<span className="text-gold-500">Seats</span>
+            In<span className="text-blue-400">Seats</span>
           </span>
         </Link>
 
@@ -62,7 +62,7 @@ const Header = () => {
           </Link>
           <Link to="/cart">
             <Button
-              className="bg-gold-500 hover:bg-gold-600 transition-colors text-black font-medium"
+              className="bg-blue-500 hover:bg-blue-600 transition-colors text-white font-medium"
               size="sm"
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
