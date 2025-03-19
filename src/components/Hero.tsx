@@ -63,7 +63,7 @@ const Hero = () => {
             </span>
             
             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-              InSeats: Your Ticket to the 
+              Your Ticket to the 
               <span className="bg-clip-text text-transparent gold-gradient block md:ml-2 md:inline-block">
                 Best Views
               </span>
