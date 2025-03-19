@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Search, Calendar, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Calendar, MapPin, Ticket, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -15,11 +15,36 @@ import { useNavigate } from "react-router-dom";
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [showTrending, setShowTrending] = useState(false);
   const navigate = useNavigate();
+  
+  // Popular searches that could be fetched from an API in a real app
+  const trendingSearches = [
+    "Taylor Swift", 
+    "NBA Playoffs", 
+    "Hamilton", 
+    "Coldplay", 
+    "Broadway Shows"
+  ];
+  
+  // Close trending suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowTrending(false);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/events?search=${searchQuery}&category=${category}`);
+    if (searchQuery.trim() || category !== "all") {
+      navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+    }
+  };
+  
+  const handleTrendingClick = (trend: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the click from bubbling to document
+    setSearchQuery(trend);
+    setShowTrending(false);
   };
 
   return (
@@ -59,7 +84,36 @@ const Hero = () => {
                   className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-12"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTrending(true);
+                  }}
+                  aria-label="Search for events"
                 />
+                
+                {/* Trending searches dropdown */}
+                {showTrending && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-white/20 rounded-md overflow-hidden z-50 shadow-xl">
+                    <div className="p-2 border-b border-white/10 flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-2 text-gold-500" />
+                      <span className="text-white/80 text-sm font-medium">Trending Searches</span>
+                    </div>
+                    <ul>
+                      {trendingSearches.map((trend, index) => (
+                        <li key={index}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleTrendingClick(trend, e)}
+                            className="w-full text-left px-4 py-2 text-white/80 hover:bg-white/10 flex items-center"
+                          >
+                            <Search className="h-3.5 w-3.5 mr-2 text-white/50" />
+                            {trend}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               
               <div className="w-full md:w-48">
@@ -82,14 +136,14 @@ const Hero = () => {
               
               <Button 
                 type="submit" 
-                className="bg-blue-500 hover:bg-blue-600 text-white h-12 transition-colors"
+                className="bg-gold-500 hover:bg-gold-600 text-black h-12 transition-colors font-medium"
               >
-                Find Seats
+                <Ticket className="h-4 w-4 mr-2" /> Find Seats
               </Button>
             </form>
           </div>
           
-          <div className="mt-8 flex items-center justify-center gap-6 text-white/80 text-sm animate-fade-in delay-500">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-white/80 text-sm animate-fade-in delay-500">
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-1.5 text-gold-500" />
               <span>Last-minute deals</span>

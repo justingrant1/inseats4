@@ -1,10 +1,34 @@
 
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { toast } from "@/components/ui/use-toast";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Would handle subscription in a real app
+    toast({
+      title: "Subscription successful!",
+      description: "You've been added to our newsletter.",
+    });
+    setEmail("");
+  };
+  
   return (
     <footer className="bg-black text-white">
       <div className="container mx-auto container-padding">
@@ -19,16 +43,16 @@ const Footer = () => {
               InSeats is your premium marketplace for last-minute and best-view tickets to concerts, sports, and theater events.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-white/70 hover:text-gold-500 transition-colors">
+              <a href="#" aria-label="Facebook" className="text-white/70 hover:text-gold-500 transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-white/70 hover:text-gold-500 transition-colors">
-                <Twitter size={20} />
+              <a href="#" aria-label="X (formerly Twitter)" className="text-white/70 hover:text-gold-500 transition-colors">
+                <X size={20} />
               </a>
-              <a href="#" className="text-white/70 hover:text-gold-500 transition-colors">
+              <a href="#" aria-label="Instagram" className="text-white/70 hover:text-gold-500 transition-colors">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-white/70 hover:text-gold-500 transition-colors">
+              <a href="#" aria-label="YouTube" className="text-white/70 hover:text-gold-500 transition-colors">
                 <Youtube size={20} />
               </a>
             </div>
@@ -91,12 +115,20 @@ const Footer = () => {
             <p className="text-white/70 mb-4">
               Subscribe to get exclusive updates and offers
             </p>
-            <div className="flex flex-col gap-3">
-              <Input placeholder="Your email" className="bg-white/10 border-white/20" />
-              <Button className="bg-gold-500 hover:bg-gold-600 text-black">
+            <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
+              <Input 
+                type="email"
+                placeholder="Your email" 
+                className="bg-white/10 border-white/20" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-label="Email for newsletter"
+              />
+              <Button type="submit" className="bg-gold-500 hover:bg-gold-600 text-black">
                 Subscribe
               </Button>
-            </div>
+            </form>
             <div className="mt-6 space-y-2">
               <div className="flex items-center gap-2 text-white/70">
                 <Mail size={16} />
@@ -112,7 +144,7 @@ const Footer = () => {
         
         <div className="py-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">
           <p className="text-white/50 text-sm mb-4 md:mb-0">
-            &copy; 2023 InSeats. All rights reserved.
+            &copy; 2025 InSeats. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link to="/terms" className="text-white/50 hover:text-white text-sm">

@@ -1,7 +1,10 @@
 
-import { CalendarClock, MapPin, Star } from "lucide-react";
+import { CalendarClock, MapPin, Star, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+
+export type SeatAvailability = "limited" | "available" | "selling-fast";
 
 export type Event = {
   id: string;
@@ -15,6 +18,8 @@ export type Event = {
   maxPrice: number;
   isPremium?: boolean;
   isLastMinute?: boolean;
+  availableSeats?: number; 
+  seatAvailability?: SeatAvailability;
 };
 
 interface EventCardProps {
@@ -23,6 +28,7 @@ interface EventCardProps {
 }
 
 const EventCard = ({ event, featured = false }: EventCardProps) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const {
     id,
     title,
@@ -34,23 +40,38 @@ const EventCard = ({ event, featured = false }: EventCardProps) => {
     minPrice,
     isPremium,
     isLastMinute,
+    availableSeats = Math.floor(Math.random() * 50) + 5, // Fallback random number if not provided
+    seatAvailability = "available"
   } = event;
 
   return (
-    <Link to={`/events/${id}`} className="block group">
+    <Link 
+      to={`/events/${id}`} 
+      className="block group" 
+      aria-labelledby={`event-${id}-title`}
+    >
       <div
         className={`premium-card h-full flex flex-col ${
           featured ? "border-gold-500/50" : "border-transparent"
         }`}
       >
         <div className="relative overflow-hidden">
-          <div className="aspect-video bg-muted overflow-hidden">
+          <div className="aspect-video bg-muted overflow-hidden relative">
             <img
               src={imageUrl}
-              alt={title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              alt=""
+              className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              aria-hidden="true"
             />
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                <div className="w-10 h-10 rounded-full border-2 border-gold-500/30 border-t-gold-500 animate-spin"></div>
+              </div>
+            )}
           </div>
           
           {/* Tags */}
@@ -76,7 +97,7 @@ const EventCard = ({ event, featured = false }: EventCardProps) => {
         </div>
 
         <div className="p-4 flex-1 flex flex-col">
-          <h3 className="font-bold text-lg line-clamp-2 group-hover:text-gold-500 transition-colors">
+          <h3 id={`event-${id}-title`} className="font-bold text-lg line-clamp-2 group-hover:text-gold-500 transition-colors">
             {title}
           </h3>
 
@@ -97,8 +118,15 @@ const EventCard = ({ event, featured = false }: EventCardProps) => {
             <span className="font-bold text-lg">
               From ${minPrice}
             </span>
-            <span className="text-sm px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
-              Available Seats
+            <span className={`text-sm px-3 py-1 rounded-full flex items-center ${
+              seatAvailability === 'limited' ? 'bg-amber-100 text-amber-700' :
+              seatAvailability === 'selling-fast' ? 'bg-red-100 text-red-700' :
+              'bg-secondary text-secondary-foreground'
+            }`}>
+              <Users className="h-3 w-3 mr-1.5" />
+              {seatAvailability === 'limited' ? 'Limited Seats' : 
+               seatAvailability === 'selling-fast' ? 'Selling Fast' : 
+               `${availableSeats}+ Available`}
             </span>
           </div>
         </div>
