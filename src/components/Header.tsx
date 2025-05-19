@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, TicketIcon, ShoppingCart, User, Search, Bell } from "lucide-react";
+import { Menu, X, TicketIcon, ShoppingCart, User, Bell, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +19,40 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
   
+  // Get user session
+  useEffect(() => {
+    const getSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        setUser(data.session?.user || null);
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getSession();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   // Mock cart count - in a real app this would come from context or state management
   useEffect(() => {
     // Simulate retrieving cart count from localStorage or context
@@ -87,34 +119,53 @@ const Header = () => {
           </Link>
           
           {/* User dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="ml-4" variant="default" size="sm">
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <TicketIcon className="h-4 w-4 mr-2" />
-                My Tickets
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell className="h-4 w-4 mr-2" />
-                Notifications
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-500">
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="ml-4" variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  {user.email?.split('@')[0] || 'My Account'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/my-tickets')}>
+                  <TicketIcon className="h-4 w-4 mr-2" />
+                  My Tickets
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/notifications')}>
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notifications
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-red-500"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/');
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              className="ml-4" 
+              variant="default" 
+              size="sm"
+              onClick={() => navigate('/login')}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Sign In
+            </Button>
+          )}
         </nav>
 
         {/* Mobile menu button */}
@@ -164,11 +215,21 @@ const Header = () => {
               Sell Tickets
             </Link>
             <div className="flex items-center gap-2 mt-4 p-2 bg-gray-50 rounded-md">
-              <Button className="flex-1" variant="default" size="default">
+              <Button 
+                className="flex-1" 
+                variant="default" 
+                size="default"
+                onClick={() => navigate('/login')}
+              >
                 <User className="h-4 w-4 mr-2" />
                 Sign In
               </Button>
-              <Button className="flex-1" variant="outline" size="default">
+              <Button 
+                className="flex-1" 
+                variant="outline" 
+                size="default"
+                onClick={() => navigate('/register')}
+              >
                 Register
               </Button>
             </div>

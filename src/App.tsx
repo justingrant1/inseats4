@@ -11,6 +11,11 @@ import SellTickets from "./pages/SellTickets";
 import Checkout from "./pages/Checkout";
 import ConfirmationPage from "./pages/ConfirmationPage";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import MyTickets from "./pages/MyTickets";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +32,14 @@ const App = () => (
           <Route path="/sell" element={<SellTickets />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
+          
+          {/* Authentication and user routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/my-tickets" element={<MyTickets />} />
+          <Route path="/notifications" element={<Notifications />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
