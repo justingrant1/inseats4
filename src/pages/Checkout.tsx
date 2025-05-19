@@ -466,45 +466,8 @@ const Checkout = () => {
                     </h2>
                     
                     <form 
-                      action="https://formspree.io/f/mqaqgwjg" 
-                      method="POST"
-                      onSubmit={(e) => {
-                        // Let the form submit to Formspree naturally
-                        // But we need to validate first
-                        if (!validateStep2()) {
-                          e.preventDefault();
-                          return;
-                        }
-
-                        // Show processing state
-                        setIsProcessing(true);
-                        
-                        // We'll simulate the payment processing after Formspree submission
-                        // For a real application, you'd handle this differently
-                        setTimeout(() => {
-                          setIsProcessing(false);
-                          toast({
-                            title: "Purchase Successful!",
-                            description: `You've successfully purchased ${checkoutData?.quantity} tickets for ${checkoutData?.eventTitle}.`,
-                          });
-                          
-                          // Generate a random order number
-                          const orderNumber = `INS-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
-                          
-                          // Navigate to confirmation page
-                          navigate('/confirmation', { 
-                            state: { 
-                              orderComplete: true,
-                              eventId: checkoutData?.eventId,
-                              eventTitle: checkoutData?.eventTitle,
-                              tierName: checkoutData?.tierName,
-                              quantity: checkoutData?.quantity,
-                              totalPrice: checkoutData?.totalPrice,
-                              orderNumber: orderNumber
-                            }
-                          });
-                        }, 2000);
-                      }}
+                      id="checkoutForm"
+                      onSubmit={handleSubmit}
                       className="space-y-6">
                       {/* Hidden fields for checkout data */}
                       <input type="hidden" name="form_type" value="checkout" />
