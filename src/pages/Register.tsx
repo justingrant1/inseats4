@@ -42,13 +42,22 @@ export default function Register() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("API key")) {
+          setError("Server configuration error. Please contact support with code: AUTH_API_ERROR");
+          console.error("Supabase API key error:", error);
+        } else {
+          throw error;
+        }
+        return;
+      }
       
       setSuccess("Registration successful! Please check your email to confirm your account.");
       // Don't navigate immediately to allow the user to read the success message
       setTimeout(() => navigate("/login"), 5000);
     } catch (error: any) {
       setError(error.message || "Failed to register");
+      console.error("Registration error:", error);
     } finally {
       setLoading(false);
     }

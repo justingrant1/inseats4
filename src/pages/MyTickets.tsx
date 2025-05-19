@@ -15,7 +15,15 @@ export default function MyTickets() {
     async function getSession() {
       try {
         const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        
+        if (error) {
+          if (error.message.includes("API key")) {
+            console.error("Supabase API key error:", error);
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
         
         if (!data.session) {
           navigate("/login");

@@ -25,10 +25,19 @@ export default function Login() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("API key")) {
+          setError("Server configuration error. Please contact support with code: AUTH_API_ERROR");
+          console.error("Supabase API key error:", error);
+        } else {
+          throw error;
+        }
+        return;
+      }
       navigate("/");
     } catch (error: any) {
       setError(error.message || "Failed to sign in");
+      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }

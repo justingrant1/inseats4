@@ -24,7 +24,16 @@ export default function Profile() {
       try {
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
+        
+        if (sessionError) {
+          if (sessionError.message.includes("API key")) {
+            console.error("Supabase API key error:", sessionError);
+            setError("Server configuration error. Please contact support with code: AUTH_API_ERROR");
+            setLoading(false);
+            return;
+          }
+          throw sessionError;
+        }
         
         if (!session) {
           navigate("/login");
