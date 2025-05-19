@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ElectronicTicket, useDeliverTicketsByEmail, useGenerateWalletTickets } from "@/lib/ticketvault";
+import { TicketSharing } from "@/lib/ticketSharing";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { QrCode, Mail, Download, Wallet, Printer, Share2, CheckCircle, AlertCircle } from "lucide-react";
+import { QrCode, Mail, Download, Wallet, Printer, Share2, CheckCircle, AlertCircle, Link, MessageSquare, Copy } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface ElectronicTicketViewerProps {
@@ -22,6 +23,14 @@ export function ElectronicTicketViewer({ ticket, orderDetails }: ElectronicTicke
   const [emailAddress, setEmailAddress] = useState("");
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareType, setShareType] = useState<'email' | 'sms' | 'link'>('email');
+  const [shareEmail, setShareEmail] = useState("");
+  const [sharePhone, setSharePhone] = useState("");
+  const [shareSenderName, setShareSenderName] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
+  const [shareLink, setShareLink] = useState("");
+  const [shareSuccess, setShareSuccess] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<'apple' | 'google'>('apple');
   
   const { mutate: deliverByEmail, isPending: isEmailDeliveryPending } = useDeliverTicketsByEmail();
@@ -89,6 +98,97 @@ export function ElectronicTicketViewer({ ticket, orderDetails }: ElectronicTicke
         });
       }
     });
+  };
+  // Handle ticket sharing
+  const handleShareTicket = async () => {
+    try {
+      let result;
+
+      if (shareType === 'email') {
+        if (!shareEmail.trim()) {
+          toast({
+            title: "Email required",
+            description: "Please enter a valid email address",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        result = await TicketSharing.shareViaEmail(ticket.ticketId, {
+          recipientEmail: shareEmail,
+          senderName: shareSenderName,
+          personalMessage: shareMessage
+        });
+      } else if (shareType === 'sms') {
+        if (!sharePhone.trim()) {
+          toast({
+            title: "Phone number required",
+            description: "Please enter a valid phone number",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        result = await TicketSharing.shareViaSms(ticket.ticketId, {
+          phoneNumber: sharePhone,
+          personalMessage: shareMessage
+        });
+      } else {
+        // Share via link
+        result = await TicketSharing.generateShareableLink(ticket.ticketId);
+      }
+
+      if (result.success) {
+        if (shareType === 'link' && result.shareUrl) {
+          setShareLink(result.shareUrl);
+          setShareSuccess(true);
+        } else {
+          toast({
+            title: "Ticket shared successfully",
+            description: result.message,
+            variant: "default"
+          });
+          
+          if (shareType !== 'link') {
+            setShareDialogOpen(false);
+          }
+        }
+      } else {
+        toast({
+          title: "Sharing failed",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Ticket sharing error:", error);
+      toast({
+        title: "Sharing failed",
+        description: "An unexpected error occurred while sharing the ticket",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const copyShareLink = () => {
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink)
+        .then(() => {
+          toast({
+            title: "Link copied",
+            description: "Share link copied to clipboard",
+            variant: "default"
+          });
+        })
+        .catch(err => {
+          console.error('Failed to copy:', err);
+          toast({
+            title: "Copy failed",
+            description: "Unable to copy link to clipboard",
+            variant: "destructive"
+          });
+        });
+    }
   };
   
   const handlePrint = () => {
@@ -352,10 +452,157 @@ export function ElectronicTicketViewer({ ticket, orderDetails }: ElectronicTicke
               Download PDF
             </Button>
             
-            <Button className="w-full justify-start" variant="outline">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share Ticket
-            </Button>
+            <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full justify-start" variant="outline">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Ticket
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Share Ticket</DialogTitle>
+                  <DialogDescription>
+                    Share your ticket with friends or family. The recipient will have view-only access.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {!shareSuccess ? (
+                  <>
+                    <div className="py-4">
+                      <div className="mb-4">
+                        <Label>Share via</Label>
+                        <div className="flex space-x-2 mt-2">
+                          <Button 
+                            variant={shareType === 'email' ? 'default' : 'outline'}
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setShareType('email')}
+                          >
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email
+                          </Button>
+                          <Button 
+                            variant={shareType === 'sms' ? 'default' : 'outline'}
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setShareType('sms')}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            SMS
+                          </Button>
+                          <Button 
+                            variant={shareType === 'link' ? 'default' : 'outline'}
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setShareType('link')}
+                          >
+                            <Link className="h-4 w-4 mr-2" />
+                            Link
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {shareType === 'email' && (
+                        <>
+                          <div className="mb-4">
+                            <Label htmlFor="share-email">Recipient Email</Label>
+                            <Input 
+                              id="share-email" 
+                              placeholder="friend@example.com" 
+                              value={shareEmail}
+                              onChange={(e) => setShareEmail(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div className="mb-4">
+                            <Label htmlFor="sender-name">Your Name (optional)</Label>
+                            <Input 
+                              id="sender-name" 
+                              placeholder="Your Name" 
+                              value={shareSenderName}
+                              onChange={(e) => setShareSenderName(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                        </>
+                      )}
+                      
+                      {shareType === 'sms' && (
+                        <div className="mb-4">
+                          <Label htmlFor="share-phone">Recipient Phone Number</Label>
+                          <Input 
+                            id="share-phone" 
+                            placeholder="+1 (123) 456-7890" 
+                            value={sharePhone}
+                            onChange={(e) => setSharePhone(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                      )}
+                      
+                      {shareType !== 'link' && (
+                        <div className="mb-4">
+                          <Label htmlFor="share-message">Personal Message (optional)</Label>
+                          <textarea 
+                            id="share-message" 
+                            placeholder="Add a personal message..." 
+                            value={shareMessage}
+                            onChange={(e) => setShareMessage(e.target.value)}
+                            className="w-full mt-1 px-3 py-2 border rounded-md border-input bg-background"
+                            rows={3}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleShareTicket}>
+                        {shareType === 'link' ? 'Generate Link' : 'Share Ticket'}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                ) : (
+                  <>
+                    <div className="py-6 flex flex-col items-center justify-center space-y-4">
+                      <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
+                        <Link className="h-8 w-8 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-medium">Share Link Generated</h3>
+                      <div className="flex w-full max-w-sm items-center space-x-2 mt-2">
+                        <Input 
+                          readOnly 
+                          value={shareLink} 
+                          className="font-mono text-sm"
+                        />
+                        <Button variant="outline" size="icon" onClick={copyShareLink}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2 text-center">
+                        Anyone with this link can view this ticket until it expires
+                      </p>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => {
+                        setShareSuccess(false);
+                        setShareLink("");
+                        setShareDialogOpen(false);
+                      }}>
+                        Close
+                      </Button>
+                      <Button variant="default" onClick={copyShareLink}>
+                        Copy Link
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </TabsContent>
       </Tabs>

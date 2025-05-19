@@ -17,6 +17,10 @@ import Profile from "./pages/Profile";
 import MyTickets from "./pages/MyTickets";
 import Notifications from "./pages/Notifications";
 import ElectronicTickets from "./pages/ElectronicTickets";
+import SharedTicket from "./pages/SharedTicket";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminTickets from "./pages/AdminTickets";
+import AdminDevPortal from "./pages/AdminDevPortal";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +45,12 @@ const App = () => (
           <Route path="/my-tickets" element={<MyTickets />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/tickets/:orderId" element={<ElectronicTickets />} />
+          <Route path="/shared/:shareId" element={<SharedTicket />} />
+          
+          {/* Admin routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/tickets" element={<AdminTickets />} />
+          <Route path="/admin/devportal" element={<AdminDevPortal />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

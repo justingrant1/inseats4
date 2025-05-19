@@ -9,6 +9,58 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      ticket_shares: {
+        Row: {
+          id: string
+          ticket_id: string
+          share_type: string
+          recipient_email: string | null
+          recipient_phone: string | null
+          sender_name: string | null
+          personal_message: string | null
+          expires_at: string
+          created_at: string
+          revoked: boolean
+          revoked_at: string | null
+          view_count: number
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          share_type: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sender_name?: string | null
+          personal_message?: string | null
+          expires_at: string
+          created_at?: string
+          revoked?: boolean
+          revoked_at?: string | null
+          view_count?: number
+        }
+        Update: {
+          id?: string
+          ticket_id?: string
+          share_type?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sender_name?: string | null
+          personal_message?: string | null
+          expires_at?: string
+          created_at?: string
+          revoked?: boolean
+          revoked_at?: string | null
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_shares_ticket_id_fkey"
+            columns: ["ticket_id"]
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       webhook_events: {
         Row: {
           id: string
@@ -195,7 +247,7 @@ export interface Database {
           event_id: string
           tier_name: string
           section: string | null
-          row: string | null
+          row_name: string | null
           seat: string | null
           price: number
           quantity: number
@@ -215,7 +267,7 @@ export interface Database {
           event_id: string
           tier_name: string
           section?: string | null
-          row?: string | null
+          row_name?: string | null
           seat?: string | null
           price: number
           quantity: number
@@ -235,7 +287,7 @@ export interface Database {
           event_id?: string
           tier_name?: string
           section?: string | null
-          row?: string | null
+          row_name?: string | null
           seat?: string | null
           price?: number
           quantity?: number
