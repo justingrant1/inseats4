@@ -16,6 +16,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import MyTickets from "./pages/MyTickets";
 import Notifications from "./pages/Notifications";
+import ElectronicTickets from "./pages/ElectronicTickets";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/my-tickets" element={<MyTickets />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/tickets/:orderId" element={<ElectronicTickets />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

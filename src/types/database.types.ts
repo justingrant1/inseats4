@@ -9,6 +9,91 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      webhook_events: {
+        Row: {
+          id: string
+          event_type: string
+          payload: Json
+          status: string
+          processed_at: string | null
+          error: string | null
+          created_at: string
+          retry_count: number
+          idempotency_key: string | null
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          payload: Json
+          status?: string
+          processed_at?: string | null
+          error?: string | null
+          created_at?: string
+          retry_count?: number
+          idempotency_key?: string | null
+        }
+        Update: {
+          id?: string
+          event_type?: string
+          payload?: Json
+          status?: string
+          processed_at?: string | null
+          error?: string | null
+          created_at?: string
+          retry_count?: number
+          idempotency_key?: string | null
+        }
+        Relationships: []
+      }
+      ticket_deliveries: {
+        Row: {
+          id: string
+          ticket_id: string
+          delivery_method: string
+          recipient: string
+          status: string
+          delivery_id: string | null
+          provider_response: Json | null
+          created_at: string
+          completed_at: string | null
+          attempts: number
+          error_details: string | null
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          delivery_method: string
+          recipient: string
+          status?: string
+          delivery_id?: string | null
+          provider_response?: Json | null
+          created_at?: string
+          completed_at?: string | null
+          attempts?: number
+          error_details?: string | null
+        }
+        Update: {
+          id?: string
+          ticket_id?: string
+          delivery_method?: string
+          recipient?: string
+          status?: string
+          delivery_id?: string | null
+          provider_response?: Json | null
+          created_at?: string
+          completed_at?: string | null
+          attempts?: number
+          error_details?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_deliveries_ticket_id_fkey"
+            columns: ["ticket_id"]
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           id: string
@@ -118,6 +203,12 @@ export interface Database {
           status: string
           created_at: string
           updated_at: string
+          barcode: string | null
+          barcode_type: string | null
+          electronic_ticket_url: string | null
+          wallet_pass_url: string | null
+          last_delivery_timestamp: string | null
+          delivery_status: string | null
         }
         Insert: {
           id?: string
@@ -132,6 +223,12 @@ export interface Database {
           status: string
           created_at?: string
           updated_at?: string
+          barcode?: string | null
+          barcode_type?: string | null
+          electronic_ticket_url?: string | null
+          wallet_pass_url?: string | null
+          last_delivery_timestamp?: string | null
+          delivery_status?: string | null
         }
         Update: {
           id?: string
@@ -146,6 +243,12 @@ export interface Database {
           status?: string
           created_at?: string
           updated_at?: string
+          barcode?: string | null
+          barcode_type?: string | null
+          electronic_ticket_url?: string | null
+          wallet_pass_url?: string | null
+          last_delivery_timestamp?: string | null
+          delivery_status?: string | null
         }
         Relationships: [
           {
@@ -178,6 +281,10 @@ export interface Database {
           shipping_address: Json | null
           created_at: string
           updated_at: string
+          webhook_logs: Json[] | null
+          last_webhook_status: string | null
+          last_webhook_timestamp: string | null
+          notification_sent: boolean
         }
         Insert: {
           id?: string
@@ -194,6 +301,10 @@ export interface Database {
           shipping_address?: Json | null
           created_at?: string
           updated_at?: string
+          webhook_logs?: Json[] | null
+          last_webhook_status?: string | null
+          last_webhook_timestamp?: string | null
+          notification_sent?: boolean
         }
         Update: {
           id?: string
@@ -210,6 +321,10 @@ export interface Database {
           shipping_address?: Json | null
           created_at?: string
           updated_at?: string
+          webhook_logs?: Json[] | null
+          last_webhook_status?: string | null
+          last_webhook_timestamp?: string | null
+          notification_sent?: boolean
         }
         Relationships: [
           {

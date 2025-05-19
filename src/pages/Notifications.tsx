@@ -4,6 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Bell, Check, Info, AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { WebhookNotificationList } from "@/components/WebhookNotification";
+import { Database } from "@/types/database.types";
+
+type OrderWithWebhookData = Database['public']['Tables']['orders']['Row'];
 
 // Mock notification data - in a real app, this would come from the database
 const mockNotifications = [
@@ -45,6 +49,7 @@ export default function Notifications() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [webhookNotifications, setWebhookNotifications] = useState<OrderWithWebhookData[]>([]);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -68,10 +73,11 @@ export default function Notifications() {
         
         setUser(data.session.user);
         
-        // In a real app, we'd fetch notifications from the database
-        // For now, we'll use mock data
+        // Fetch regular notifications
         setNotifications(mockNotifications);
-        setLoading(false);
+        
+        // Fetch webhook notifications from orders with pending notifications
+        fetchWebhookNotifications(data.session.user.id);
       } catch (error: any) {
         console.error("Error getting session:", error.message);
         setLoading(false);
@@ -80,6 +86,52 @@ export default function Notifications() {
 
     getSession();
   }, [navigate]);
+  
+  // Fetch webhook notifications from orders
+  async function fetchWebhookNotifications(userId: string) {
+    try {
+      // Query orders that have webhook notifications with notification_sent = false
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', userId)
+        .not('last_webhook_status', 'is', null)
+        .eq('notification_sent', false)
+        .order('updated_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setWebhookNotifications(orders as OrderWithWebhookData[]);
+      setLoading(false);
+    } catch (error: any) {
+      console.error("Error fetching webhook notifications:", error.message);
+      setLoading(false);
+    }
+  }
+  
+  // Mark a webhook notification as read
+  async function markWebhookAsRead(orderId: string) {
+    try {
+      // Update the order to mark notification as sent
+      const { error } = await supabase
+        .from('orders')
+        .update({ notification_sent: true })
+        .eq('id', orderId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setWebhookNotifications(prev => 
+        prev.filter(order => order.id !== orderId)
+      );
+    } catch (error: any) {
+      console.error("Error marking webhook notification as read:", error.message);
+    }
+  }
 
   function formatDate(dateString: string) {
     const date = new Date(dateString);
@@ -154,49 +206,68 @@ export default function Notifications() {
       
       {loading ? (
         <div className="text-center py-10">Loading notifications...</div>
-      ) : notifications.length === 0 ? (
+      ) : notifications.length === 0 && webhookNotifications.length === 0 ? (
         <div className="text-center py-10">
           <Bell className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium mb-2">No notifications</h3>
           <p className="text-gray-500">We'll notify you when there's something new.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {notifications.map((notification) => (
-            <Card 
-              key={notification.id} 
-              className={`transition-colors ${!notification.read ? 'bg-blue-50' : ''}`}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-4">
-                    <div className="mt-1">{getIconForType(notification.type)}</div>
-                    <div>
-                      <CardTitle>{notification.title}</CardTitle>
-                      <CardDescription className="mt-1 text-xs">
-                        {formatDate(notification.createdAt)}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  
-                  {!notification.read && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8" 
-                      onClick={() => markAsRead(notification.id)}
-                    >
-                      <X className="h-4 w-4" />
-                      <span className="sr-only">Mark as read</span>
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">{notification.message}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="space-y-8">
+          {/* Webhook notifications */}
+          {webhookNotifications.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold mb-3">Order Updates</h2>
+              <WebhookNotificationList 
+                orders={webhookNotifications}
+                onDismiss={markWebhookAsRead}
+              />
+            </div>
+          )}
+          
+          {/* Regular notifications */}
+          {notifications.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold mb-3">General Notifications</h2>
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <Card 
+                    key={notification.id} 
+                    className={`transition-colors ${!notification.read ? 'bg-blue-50' : ''}`}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-4">
+                          <div className="mt-1">{getIconForType(notification.type)}</div>
+                          <div>
+                            <CardTitle>{notification.title}</CardTitle>
+                            <CardDescription className="mt-1 text-xs">
+                              {formatDate(notification.createdAt)}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        
+                        {!notification.read && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8" 
+                            onClick={() => markAsRead(notification.id)}
+                          >
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Mark as read</span>
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">{notification.message}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

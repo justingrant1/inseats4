@@ -6,6 +6,9 @@ import { Menu, X, TicketIcon, ShoppingCart, User, Bell, LogOut } from "lucide-re
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import { Database } from "@/types/database.types";
+
+type OrderWithWebhookData = Database['public']['Tables']['orders']['Row'];
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +24,7 @@ const Header = () => {
   const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [notificationCount, setNotificationCount] = useState(0);
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,6 +62,42 @@ const Header = () => {
     // Simulate retrieving cart count from localStorage or context
     setCartCount(Math.floor(Math.random() * 3));
   }, []);
+  
+  // Fetch webhook notifications when user is logged in
+  useEffect(() => {
+    if (!user) {
+      setNotificationCount(0);
+      return;
+    }
+    
+    async function fetchNotificationCount() {
+      try {
+        // Query orders with unread webhook notifications
+        const { data, error } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('user_id', user.id)
+          .not('last_webhook_status', 'is', null)
+          .eq('notification_sent', false);
+          
+        if (error) {
+          throw error;
+        }
+        
+        setNotificationCount(data?.length || 0);
+      } catch (error: any) {
+        console.error('Error fetching notification count:', error.message);
+      }
+    }
+    
+    // Initial fetch
+    fetchNotificationCount();
+    
+    // Set up a polling interval to check for new notifications
+    const intervalId = setInterval(fetchNotificationCount, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
+  }, [user]);
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -138,9 +178,14 @@ const Header = () => {
                   <TicketIcon className="h-4 w-4 mr-2" />
                   My Tickets
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/notifications')}>
+                <DropdownMenuItem onClick={() => navigate('/notifications')} className="relative">
                   <Bell className="h-4 w-4 mr-2" />
                   Notifications
+                  {notificationCount > 0 && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
@@ -214,25 +259,73 @@ const Header = () => {
               <TicketIcon className="mr-2 h-5 w-5" />
               Sell Tickets
             </Link>
-            <div className="flex items-center gap-2 mt-4 p-2 bg-gray-50 rounded-md">
-              <Button 
-                className="flex-1" 
-                variant="default" 
-                size="default"
-                onClick={() => navigate('/login')}
-              >
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-              <Button 
-                className="flex-1" 
-                variant="outline" 
-                size="default"
-                onClick={() => navigate('/register')}
-              >
-                Register
-              </Button>
-            </div>
+            {user ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="px-4 py-3 rounded-md text-base font-medium flex items-center"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <User className="mr-2 h-5 w-5" />
+                  Profile
+                </Link>
+                <Link
+                  to="/my-tickets"
+                  className="px-4 py-3 rounded-md text-base font-medium flex items-center"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <TicketIcon className="mr-2 h-5 w-5" />
+                  My Tickets
+                </Link>
+                <Link
+                  to="/notifications"
+                  className="px-4 py-3 rounded-md text-base font-medium flex items-center justify-between"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <Bell className="mr-2 h-5 w-5" />
+                    Notifications
+                  </div>
+                  {notificationCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
+                </Link>
+                <Button 
+                  className="mt-4" 
+                  variant="outline"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/');
+                    setIsOpen(false);
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log Out
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 mt-4 p-2 bg-gray-50 rounded-md">
+                <Button 
+                  className="flex-1" 
+                  variant="default" 
+                  size="default"
+                  onClick={() => navigate('/login')}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+                <Button 
+                  className="flex-1" 
+                  variant="outline" 
+                  size="default"
+                  onClick={() => navigate('/register')}
+                >
+                  Register
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

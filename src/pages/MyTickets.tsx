@@ -197,10 +197,16 @@ export default function MyTickets() {
                     </div>
                     
                     {order.status === "completed" && (
-                      <Button className="w-full" variant="outline">
-                        <TicketIcon className="h-4 w-4 mr-2" />
-                        View Ticket
-                      </Button>
+                      <div className="space-y-2">
+                        <Button 
+                          className="w-full" 
+                          variant="outline"
+                          onClick={() => navigate(`/tickets/${order.id}`)}
+                        >
+                          <TicketIcon className="h-4 w-4 mr-2" />
+                          Electronic Tickets
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </CardContent>
