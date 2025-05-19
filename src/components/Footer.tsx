@@ -115,9 +115,56 @@ const Footer = () => {
             <p className="text-white/70 mb-4">
               Subscribe to get exclusive updates and offers
             </p>
-            <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
+            <form
+              action="https://formspree.io/f/mqaqgwjg"
+              method="POST"
+              onSubmit={(e) => {
+                e.preventDefault();
+                
+                if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                  toast({
+                    title: "Invalid email",
+                    description: "Please enter a valid email address",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                // Send to Formspree
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('subscription_type', 'newsletter');
+                
+                fetch('https://formspree.io/f/mqaqgwjg', {
+                  method: 'POST',
+                  body: formData,
+                  headers: {
+                    'Accept': 'application/json'
+                  }
+                }).then(response => {
+                  if (response.ok) {
+                    toast({
+                      title: "Subscription successful!",
+                      description: "You've been added to our newsletter.",
+                    });
+                    setEmail("");
+                  } else {
+                    throw new Error('Subscription failed');
+                  }
+                }).catch(error => {
+                  console.error('Error:', error);
+                  toast({
+                    title: "Subscription failed",
+                    description: "Please try again later.",
+                    variant: "destructive",
+                  });
+                });
+              }}
+              className="flex flex-col gap-3"
+            >
               <Input 
                 type="email"
+                name="email"
                 placeholder="Your email" 
                 className="bg-white/10 border-white/20" 
                 value={email}
@@ -125,6 +172,7 @@ const Footer = () => {
                 required
                 aria-label="Email for newsletter"
               />
+              <Input type="hidden" name="subscription_type" value="newsletter" />
               <Button type="submit" className="bg-gold-500 hover:bg-gold-600 text-black">
                 Subscribe
               </Button>

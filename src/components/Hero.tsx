@@ -75,7 +75,33 @@ const Hero = () => {
           </div>
           
           <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-lg max-w-3xl mx-auto animate-fade-in delay-300 border border-white/20">
-            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
+            <form 
+              action="https://formspree.io/f/mqaqgwjg"
+              method="POST"
+              onSubmit={(e) => {
+                e.preventDefault();
+                
+                // Send search data to Formspree if there's a query
+                if (searchQuery.trim() || category !== "all") {
+                  const formData = new FormData();
+                  formData.append('searchQuery', searchQuery);
+                  formData.append('category', category);
+                  formData.append('form_type', 'event_search');
+                  
+                  fetch('https://formspree.io/f/mqaqgwjg', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                      'Accept': 'application/json'
+                    }
+                  });
+                  
+                  // Navigate to the search results page
+                  navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+                }
+              }}
+              className="flex flex-col md:flex-row gap-3"
+            >
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
                 <Input
@@ -134,6 +160,7 @@ const Hero = () => {
                 </Select>
               </div>
               
+              <input type="hidden" name="form_type" value="event_search" />
               <Button 
                 type="submit" 
                 className="bg-gold-500 hover:bg-gold-600 text-black h-12 transition-colors font-medium"

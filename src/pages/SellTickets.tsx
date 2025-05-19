@@ -77,7 +77,67 @@ const SellTickets = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form 
+          action="https://formspree.io/f/mqaqgwjg" 
+          method="POST"
+          onSubmit={(e) => {
+            e.preventDefault();
+            
+            // Validate form data
+            if (!eventDetails.eventName || !eventDetails.eventDate || 
+                !eventDetails.eventLocation || !eventDetails.ticketPrice || 
+                !eventDetails.ticketQuantity) {
+              toast({
+                title: "Missing information",
+                description: "Please fill in all the required fields",
+                variant: "destructive"
+              });
+              return;
+            }
+            
+            // Send to Formspree
+            const formData = new FormData();
+            Object.entries(eventDetails).forEach(([key, value]) => {
+              formData.append(key, value);
+            });
+            formData.append('form_type', 'sell_tickets');
+            
+            fetch('https://formspree.io/f/mqaqgwjg', {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Accept': 'application/json'
+              }
+            }).then(response => {
+              if (response.ok) {
+                // Form is valid, show success message
+                toast({
+                  title: "Listing created!",
+                  description: "Your tickets have been listed for sale.",
+                });
+                
+                // Reset form
+                setEventDetails({
+                  eventName: "",
+                  eventDate: "",
+                  eventLocation: "",
+                  ticketPrice: "",
+                  ticketQuantity: ""
+                });
+              } else {
+                throw new Error('Form submission failed');
+              }
+            }).catch(error => {
+              console.error('Error:', error);
+              toast({
+                title: "Submission Error",
+                description: "There was a problem submitting your listing. Please try again.",
+                variant: "destructive",
+              });
+            });
+          }}
+          className="space-y-6"
+        >
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label htmlFor="eventName" className="text-sm font-medium">
@@ -149,6 +209,7 @@ const SellTickets = () => {
             </div>
           </div>
 
+          <input type="hidden" name="form_type" value="sell_tickets" />
           <div className="pt-4 border-t">
             <Button type="submit" className="w-full sm:w-auto">
               List Tickets for Sale
