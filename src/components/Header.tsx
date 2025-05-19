@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, TicketIcon, ShoppingCart, User, Bell, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database.types";
 
@@ -149,14 +150,38 @@ const Header = () => {
           </Link>
           
           {/* Cart icon with badge */}
-          <Link to="/checkout" className="ml-4 relative" aria-label="Shopping cart">
+          <div 
+            onClick={() => {
+              if (cartCount > 0) {
+                // Mock checkout data for demonstration
+                const mockCheckoutData = {
+                  eventId: "sample-event-1",
+                  eventTitle: "Sample Event",
+                  tierName: "VIP",
+                  tierPrice: 149.99,
+                  quantity: cartCount,
+                  totalPrice: 149.99 * cartCount * 1.1 // Add 10% service fee
+                };
+                
+                navigate("/checkout", { state: mockCheckoutData });
+              } else {
+                toast({
+                  title: "Your cart is empty",
+                  description: "Browse our events to find tickets",
+                  variant: "default",
+                });
+              }
+            }}
+            className="ml-4 relative cursor-pointer" 
+            aria-label="Shopping cart"
+          >
             <ShoppingCart className="h-5 w-5 text-foreground hover:text-gold-500" />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-gold-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                 {cartCount}
               </span>
             )}
-          </Link>
+          </div>
           
           {/* User dropdown */}
           {user ? (
@@ -215,14 +240,38 @@ const Header = () => {
 
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center gap-4">
-          <Link to="/checkout" className="relative" aria-label="Shopping cart">
+          <div
+            onClick={() => {
+              if (cartCount > 0) {
+                // Mock checkout data for demonstration
+                const mockCheckoutData = {
+                  eventId: "sample-event-1",
+                  eventTitle: "Sample Event",
+                  tierName: "VIP",
+                  tierPrice: 149.99,
+                  quantity: cartCount,
+                  totalPrice: 149.99 * cartCount * 1.1 // Add 10% service fee
+                };
+                
+                navigate("/checkout", { state: mockCheckoutData });
+              } else {
+                toast({
+                  title: "Your cart is empty",
+                  description: "Browse our events to find tickets",
+                  variant: "default",
+                });
+              }
+            }}
+            className="relative cursor-pointer"
+            aria-label="Shopping cart"
+          >
             <ShoppingCart className="h-5 w-5 text-foreground hover:text-gold-500" />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-gold-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                 {cartCount}
               </span>
             )}
-          </Link>
+          </div>
           <button
             className="p-2"
             onClick={() => setIsOpen(!isOpen)}

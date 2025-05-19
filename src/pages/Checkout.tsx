@@ -6,7 +6,6 @@ import { ArrowLeft, CreditCard, Clock, Shield, Check, ShoppingBag, AlertCircle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 
@@ -252,11 +251,10 @@ const Checkout = () => {
     }, 2000);
   };
 
-  if (isLoading) {
+    if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4">
+        <main className="flex-1 container mx-auto py-8 px-4 mt-16">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
             <div className="h-64 bg-muted rounded-lg mb-6"></div>
@@ -270,8 +268,7 @@ const Checkout = () => {
   if (!checkoutData) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4">
+        <main className="flex-1 container mx-auto py-8 px-4 mt-16">
           <div className="text-center py-16">
             <h2 className="text-2xl font-bold">Checkout Error</h2>
             <p className="text-muted-foreground mt-2">Unable to process your checkout. Please try again.</p>
@@ -301,7 +298,6 @@ const Checkout = () => {
       </Helmet>
       
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
         <main className="flex-1 container mx-auto py-8 px-4 mt-16">
           <div className="mb-6">
             <Link to={`/events/${checkoutData?.eventId}`} className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4 transition-colors">
