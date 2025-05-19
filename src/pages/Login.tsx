@@ -29,6 +29,12 @@ export default function Login() {
         if (error.message.includes("API key")) {
           setError("Server configuration error. Please contact support with code: AUTH_API_ERROR");
           console.error("Supabase API key error:", error);
+        } else if (error.message.includes("Email not confirmed")) {
+          // Handle unverified email error more gracefully for legacy users
+          setError("Your email address has not been verified. Please check your inbox and click the verification link. If you need a new verification email, click 'Forgot password' and follow the steps.");
+          console.error("Email verification error:", error);
+        } else if (error.message.includes("Invalid login credentials")) {
+          setError("Invalid email or password. Please check your credentials and try again.");
         } else {
           throw error;
         }

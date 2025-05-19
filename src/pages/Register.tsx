@@ -34,11 +34,15 @@ export default function Register() {
     setLoading(true);
 
     try {
+      // Instead of requiring email verification, we'll sign up and then immediately sign in
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          // Skip setting emailRedirectTo to avoid email verification flow
+          data: {
+            auto_confirm: true // Custom metadata for tracking auto-confirmed users
+          }
         }
       });
 
@@ -52,9 +56,26 @@ export default function Register() {
         return;
       }
       
-      setSuccess("Registration successful! Please check your email to confirm your account.");
-      // Don't navigate immediately to allow the user to read the success message
-      setTimeout(() => navigate("/login"), 5000);
+      // If we got a session, user was automatically signed in
+      if (data && data.session) {
+        setSuccess("Registration successful! You are now logged in.");
+        // Navigate to home page after successful registration
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        // No session was created, so manually sign in the user
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (signInError) {
+          setSuccess("Registration successful! Please proceed to login.");
+          setTimeout(() => navigate("/login"), 2000);
+        } else {
+          setSuccess("Registration and login successful!");
+          setTimeout(() => navigate("/"), 2000);
+        }
+      }
     } catch (error: any) {
       setError(error.message || "Failed to register");
       console.error("Registration error:", error);
