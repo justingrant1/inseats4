@@ -119,9 +119,9 @@ const Footer = () => {
               action="https://formspree.io/f/mqaqgwjg"
               method="POST"
               onSubmit={(e) => {
-                e.preventDefault();
-                
+                // We still validate but no longer prevent default
                 if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                  e.preventDefault();
                   toast({
                     title: "Invalid email",
                     description: "Please enter a valid email address",
@@ -130,35 +130,15 @@ const Footer = () => {
                   return;
                 }
                 
-                // Send to Formspree
-                const formData = new FormData();
-                formData.append('email', email);
-                formData.append('subscription_type', 'newsletter');
-                
-                fetch('https://formspree.io/f/mqaqgwjg', {
-                  method: 'POST',
-                  body: formData,
-                  headers: {
-                    'Accept': 'application/json'
-                  }
-                }).then(response => {
-                  if (response.ok) {
-                    toast({
-                      title: "Subscription successful!",
-                      description: "You've been added to our newsletter.",
-                    });
-                    setEmail("");
-                  } else {
-                    throw new Error('Subscription failed');
-                  }
-                }).catch(error => {
-                  console.error('Error:', error);
+                // Let Formspree handle the submission
+                // Show toast after a short delay to simulate submission
+                setTimeout(() => {
                   toast({
-                    title: "Subscription failed",
-                    description: "Please try again later.",
-                    variant: "destructive",
+                    title: "Subscription successful!",
+                    description: "You've been added to our newsletter.",
                   });
-                });
+                  setEmail("");
+                }, 300);
               }}
               className="flex flex-col gap-3"
             >

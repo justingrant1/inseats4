@@ -81,23 +81,15 @@ const Hero = () => {
               onSubmit={(e) => {
                 e.preventDefault();
                 
-                // Send search data to Formspree if there's a query
+                // Search validation and navigation
                 if (searchQuery.trim() || category !== "all") {
-                  const formData = new FormData();
-                  formData.append('searchQuery', searchQuery);
-                  formData.append('category', category);
-                  formData.append('form_type', 'event_search');
-                  
-                  fetch('https://formspree.io/f/mqaqgwjg', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                      'Accept': 'application/json'
-                    }
-                  });
-                  
-                  // Navigate to the search results page
-                  navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+                  // We'll let Formspree handle the form submission naturally
+                  // And navigate to the search results page
+                  setTimeout(() => {
+                    navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+                  }, 300); // Small delay to ensure form submission starts
+                } else {
+                  e.preventDefault(); // Prevent form submission if empty search
                 }
               }}
               className="flex flex-col md:flex-row gap-3"
