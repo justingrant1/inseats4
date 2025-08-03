@@ -35,10 +35,12 @@ export async function createPaymentIntent(
     })
     
     // Call the Supabase Edge Function to create a real payment intent
-    const response = await fetch('/api/create-payment-intent', {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    const response = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
         amount: stripeAmount,
