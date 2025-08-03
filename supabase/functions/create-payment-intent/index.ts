@@ -16,14 +16,23 @@ serve(async (req) => {
     // Get Stripe secret key from environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
     
+    console.log('Stripe secret key exists:', !!stripeSecretKey)
+    
     if (!stripeSecretKey) {
+      console.error('Stripe secret key not configured')
       throw new Error('Stripe secret key not configured')
     }
 
     // Parse request body
-    const { amount, currency = 'usd', metadata = {} } = await req.json()
+    const requestBody = await req.json()
+    console.log('Request body:', requestBody)
+    
+    const { amount, currency = 'usd', metadata = {} } = requestBody
+
+    console.log('Parsed values:', { amount, currency, metadata })
 
     if (!amount || amount <= 0) {
+      console.error('Invalid amount:', amount)
       throw new Error('Invalid amount')
     }
 
