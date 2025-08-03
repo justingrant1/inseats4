@@ -26,30 +26,26 @@ export async function createPaymentIntent(
   metadata: Record<string, string> = {}
 ): Promise<{ clientSecret: string; paymentIntentId?: string } | { error: string }> {
   try {
-    // Call our Supabase Edge Function to create payment intent
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    const functionUrl = `${supabaseUrl}/functions/v1/create-payment-intent`
+    // For demo purposes, create a mock payment intent
+    // In production, this would call your backend API
+    const stripeAmount = formatAmountForStripe(amount, currency)
     
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ 
-        amount: formatAmountForStripe(amount, currency), 
-        currency,
-        metadata 
-      }),
+    // Generate a mock client secret for demo
+    const mockClientSecret = `pi_mock_${Math.random().toString(36).substring(2)}_secret_${Math.random().toString(36).substring(2)}`
+    
+    console.log('Creating mock payment intent for demo:', {
+      amount: stripeAmount,
+      currency,
+      metadata
     })
     
-    const data = await response.json()
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create payment intent')
+    return {
+      clientSecret: mockClientSecret,
+      paymentIntentId: `pi_mock_${Math.random().toString(36).substring(2)}`
     }
-    
-    return data
   } catch (error) {
     console.error('Error creating payment intent:', error)
     return { error: error instanceof Error ? error.message : 'Failed to create payment intent' }
