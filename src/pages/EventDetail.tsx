@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -138,8 +138,8 @@ const EventDetail = () => {
 
   const selectedTierData = seatTiers.find(t => t.id === selectedTier);
 
-  // Dynamic SEO for event details
-  const seoData = {
+  // Dynamic SEO for event details - memoized to prevent infinite re-renders
+  const seoData = useMemo(() => ({
     title: `${event.title} | InSeats Premium Tickets`,
     description: `Get premium tickets for ${event.title} at ${event.venue}. Find the best seats at the best prices. Secure checkout and instant delivery.`,
     keywords: `${event.title} tickets, ${event.venue} tickets, ${event.category} tickets, buy ${event.title} tickets online`,
@@ -171,7 +171,7 @@ const EventDetail = () => {
         "availability": "https://schema.org/InStock"
       }
     }
-  };
+  }), [event.title, event.venue, event.category, event.id, event.minPrice, event.imageUrl, event.date, event.location]);
 
   useSEO(seoData);
 
