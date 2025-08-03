@@ -1,0 +1,76 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    // Get Stripe secret key from environment
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    
+    if (!stripeSecretKey) {
+      throw new Error('Stripe secret key not configured')
+    }
+
+    // Parse request body
+    const { amount, currency = 'usd', metadata = {} } = await req.json()
+
+    if (!amount || amount <= 0) {
+      throw new Error('Invalid amount')
+    }
+
+    // Create payment intent with Stripe API
+    const stripeResponse = await fetch('https://api.stripe.com/v1/payment_intents', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        amount: amount.toString(),
+        currency: currency,
+        automatic_payment_methods: JSON.stringify({ enabled: true }),
+        ...Object.entries(metadata).reduce((acc, [key, value]) => {
+          acc[`metadata[${key}]`] = value as string
+          return acc
+        }, {} as Record<string, string>)
+      }),
+    })
+
+    if (!stripeResponse.ok) {
+      const error = await stripeResponse.text()
+      console.error('Stripe API error:', error)
+      throw new Error('Failed to create payment intent')
+    }
+
+    const paymentIntent = await stripeResponse.json()
+
+    return new Response(
+      JSON.stringify({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    )
+  } catch (error) {
+    console.error('Error creating payment intent:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    )
+  }
+})

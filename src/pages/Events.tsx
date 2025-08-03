@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import { Filter, Search, Calendar } from "lucide-react";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import EventCard, { Event } from "@/components/EventCard";
+import EventCard from "@/components/EventCard";
+import { Event } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
@@ -22,6 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useSEO, seoConfigs } from "@/hooks/useSEO";
 
 // Sample event data - in a real app, this would come from an API
 const sampleEvents: Event[] = [
@@ -144,22 +145,31 @@ const Events = () => {
     e.preventDefault();
     // The filtering is already handled by the useEffect
   };
+
+  // Dynamic SEO based on search and filters
+  const seoData = {
+    ...seoConfigs.events,
+    title: searchQuery 
+      ? `${searchQuery} - Event Search Results | InSeats` 
+      : category !== "all" 
+        ? `${category.charAt(0).toUpperCase() + category.slice(1)} Events | InSeats`
+        : seoConfigs.events.title,
+    description: searchQuery
+      ? `Find ${searchQuery} tickets and events. Premium tickets with secure checkout and instant delivery.`
+      : category !== "all"
+        ? `Browse ${category} events and find premium tickets. Secure checkout, instant delivery, and authentic tickets guaranteed.`
+        : seoConfigs.events.description,
+    keywords: searchQuery
+      ? `${searchQuery} tickets, ${searchQuery} events, buy ${searchQuery} tickets online`
+      : category !== "all"
+        ? `${category} tickets, ${category} events, buy ${category} tickets online`
+        : seoConfigs.events.keywords
+  };
+
+  useSEO(seoData);
   
   return (
-    <>
-      <Helmet>
-        <title>
-          {searchQuery 
-            ? `${searchQuery} - Event Search Results | InSeats` 
-            : "Browse Events | InSeats"}
-        </title>
-        <meta 
-          name="description" 
-          content="Find premium tickets for concerts, sports, theater, and comedy events. Last-minute deals available." 
-        />
-      </Helmet>
-      
-      <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
         <Header />
         
         <main className="flex-1 bg-gray-50 pt-20">
@@ -273,8 +283,7 @@ const Events = () => {
         </main>
         
         <Footer />
-      </div>
-    </>
+    </div>
   );
 };
 

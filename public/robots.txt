@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /my-tickets
+Disallow: /profile
+Disallow: /notifications
+Disallow: /login
+Disallow: /register
+
+# Sitemap location
+Sitemap: https://inseats.com/sitemap.xml
+
+# Crawl delay (optional - helps prevent server overload)
+Crawl-delay: 1

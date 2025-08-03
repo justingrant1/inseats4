@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { ArrowLeft, CreditCard, Clock, Shield, Check, ShoppingBag, AlertCircle } from "lucide-react";
+import { ArrowLeft, Clock, Shield, Check, ShoppingBag, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import Footer from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
+import StripeCheckoutForm from "@/components/StripeCheckoutForm";
+import { createPaymentIntent } from "@/lib/stripe";
 
 // Type definitions
 interface CheckoutState {
@@ -26,17 +28,13 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    cardNumber: "",
-    expiry: "",
-    cvc: "",
-    address: "",
-    city: "",
-    zipCode: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [step, setStep] = useState(1); // 1 = customer info, 2 = payment
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [clientSecret, setClientSecret] = useState<string>("");
+  const [paymentIntentId, setPaymentIntentId] = useState<string>("");
 
   useEffect(() => {
     // Get checkout data from location state
@@ -94,65 +92,6 @@ const Checkout = () => {
     }
   };
 
-  // Format card number with spaces
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || "";
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(" ");
-    } else {
-      return value;
-    }
-  };
-
-  // Format expiry date as MM/YY
-  const formatExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    
-    if (v.length >= 2) {
-      return `${v.substring(0, 2)}/${v.substring(2, 4)}`;
-    }
-    
-    return value;
-  };
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    const formattedValue = formatCardNumber(value);
-    setFormData((prev) => ({ ...prev, cardNumber: formattedValue }));
-    
-    // Clear error when user starts typing
-    if (errors.cardNumber) {
-      setErrors(prev => {
-        const newErrors = {...prev};
-        delete newErrors.cardNumber;
-        return newErrors;
-      });
-    }
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    const formattedValue = formatExpiry(value);
-    setFormData((prev) => ({ ...prev, expiry: formattedValue }));
-    
-    // Clear error when user starts typing
-    if (errors.expiry) {
-      setErrors(prev => {
-        const newErrors = {...prev};
-        delete newErrors.expiry;
-        return newErrors;
-      });
-    }
-  };
-
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
     
@@ -170,111 +109,99 @@ const Checkout = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateStep2 = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.cardNumber.trim() || formData.cardNumber.replace(/\s/g, '').length < 16) {
-      newErrors.cardNumber = "Valid card number is required";
-    }
-    
-    if (!formData.expiry.trim() || formData.expiry.length < 5) {
-      newErrors.expiry = "Valid expiry date is required";
-    }
-    
-    if (!formData.cvc.trim() || formData.cvc.length < 3) {
-      newErrors.cvc = "Valid CVC is required";
-    }
-    
-    if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
-    }
-    
-    if (!formData.city.trim()) {
-      newErrors.city = "City is required";
-    }
-    
-    if (!formData.zipCode.trim()) {
-      newErrors.zipCode = "Zip code is required";
+  const handleNextStep = async () => {
+    if (!validateStep1()) {
+      return;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setIsProcessing(true);
 
-  const handleNextStep = () => {
-    if (validateStep1()) {
-      setStep(2);
-      // Scroll to top when changing steps
-      window.scrollTo(0, 0);
+    try {
+      // Create payment intent when moving to step 2
+      if (checkoutData) {
+        const result = await createPaymentIntent(
+          checkoutData.totalPrice,
+          'usd',
+          {
+            eventId: checkoutData.eventId,
+            eventTitle: checkoutData.eventTitle,
+            tierName: checkoutData.tierName,
+            quantity: checkoutData.quantity.toString(),
+            customerName: formData.name,
+            customerEmail: formData.email,
+          }
+        );
+
+        if ('error' in result) {
+          toast({
+            title: "Payment Setup Failed",
+            description: result.error,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setClientSecret(result.clientSecret);
+        if (result.paymentIntentId) {
+          setPaymentIntentId(result.paymentIntentId);
+        }
+        
+        setStep(2);
+        // Scroll to top when changing steps
+        window.scrollTo(0, 0);
+      }
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      toast({
+        title: "Payment Setup Failed",
+        description: "Unable to initialize payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handlePrevStep = () => {
     setStep(1);
+    setClientSecret("");
+    setPaymentIntentId("");
     // Scroll to top when changing steps
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateStep2()) {
-      return;
-    }
-    
-    setIsProcessing(true);
-
-    // Send data to Formspree first
-    const formDataToSend = new FormData();
-    formDataToSend.append('form_type', 'checkout');
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('email', formData.email);
-    formDataToSend.append('cardNumber', formData.cardNumber.replace(/\s/g, '')); // Remove spaces
-    formDataToSend.append('address', formData.address);
-    formDataToSend.append('city', formData.city);
-    formDataToSend.append('zipCode', formData.zipCode);
-    formDataToSend.append('eventTitle', checkoutData!.eventTitle);
-    formDataToSend.append('tierName', checkoutData!.tierName);
-    formDataToSend.append('quantity', checkoutData!.quantity.toString());
-    formDataToSend.append('totalPrice', checkoutData!.totalPrice.toString());
-    
-    // Submit to Formspree in the background
-    fetch('https://formspree.io/f/mqaqgwjg', {
-      method: 'POST',
-      body: formDataToSend,
-      headers: {
-        'Accept': 'application/json'
-      }
-    }).then(response => {
-      console.log('Formspree response:', response.ok);
-    }).catch(error => {
-      console.error('Formspree error:', error);
+  const handlePaymentSuccess = (paymentIntent: any) => {
+    toast({
+      title: "Purchase Successful!",
+      description: `You've successfully purchased ${checkoutData?.quantity} tickets for ${checkoutData?.eventTitle}.`,
     });
     
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      toast({
-        title: "Purchase Successful!",
-        description: `You've successfully purchased ${checkoutData?.quantity} tickets for ${checkoutData?.eventTitle}.`,
-      });
-      
-      // Generate a random order number
-      const orderNumber = `INS-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
-      
-      // Navigate to confirmation page
-      navigate('/confirmation', { 
-        state: { 
-          orderComplete: true,
-          eventId: checkoutData?.eventId,
-          eventTitle: checkoutData?.eventTitle,
-          tierName: checkoutData?.tierName,
-          quantity: checkoutData?.quantity,
-          totalPrice: checkoutData?.totalPrice,
-          orderNumber: orderNumber
-        }
-      });
-    }, 2000);
+    // Generate a random order number
+    const orderNumber = `INS-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
+    
+    // Navigate to confirmation page
+    navigate('/confirmation', { 
+      state: { 
+        orderComplete: true,
+        eventId: checkoutData?.eventId,
+        eventTitle: checkoutData?.eventTitle,
+        tierName: checkoutData?.tierName,
+        quantity: checkoutData?.quantity,
+        totalPrice: checkoutData?.totalPrice,
+        orderNumber: orderNumber,
+        paymentIntentId: paymentIntent.id,
+        customerName: formData.name,
+        customerEmail: formData.email,
+      }
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
   };
 
   if (isLoading) {
@@ -477,177 +404,52 @@ const Checkout = () => {
                         type="button"
                         onClick={handleNextStep}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-base"
+                        disabled={isProcessing}
                       >
-                        Continue to Payment
+                        {isProcessing ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Setting up payment...
+                          </span>
+                        ) : (
+                          "Continue to Payment"
+                        )}
                       </Button>
                     </form>
                   </>
                 )}
                 
-                {step === 2 && (
+                {step === 2 && clientSecret && (
                   <>
-                    <h2 className="text-xl font-bold mb-6 flex items-center">
-                      <CreditCard className="h-5 w-5 mr-2 text-blue-500" />
-                      Payment Details
-                    </h2>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold">Payment Details</h2>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handlePrevStep}
+                        size="sm"
+                      >
+                        Back
+                      </Button>
+                    </div>
                     
-                    <form 
-                      id="checkoutForm"
-                      onSubmit={handleSubmit}
-                      className="space-y-6">
-                      {/* Hidden fields for checkout data */}
-                      <input type="hidden" name="form_type" value="checkout" />
-                      <input type="hidden" name="eventTitle" value={checkoutData.eventTitle} />
-                      <input type="hidden" name="tierName" value={checkoutData.tierName} />
-                      <input type="hidden" name="quantity" value={checkoutData.quantity.toString()} />
-                      <input type="hidden" name="totalPrice" value={checkoutData.totalPrice.toString()} />
-                      <div className="space-y-4">
-                        <h3 className="font-medium border-b pb-2">Card Information</h3>
-                        
-                        <div>
-                          <label htmlFor="cardNumber" className="block text-sm font-medium mb-1">Card Number</label>
-                          <Input
-                            id="cardNumber"
-                            name="cardNumber"
-                            value={formData.cardNumber}
-                            onChange={handleCardNumberChange}
-                            placeholder="1234 5678 9012 3456"
-                            maxLength={19}
-                            className={`w-full ${errors.cardNumber ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                          />
-                          {errors.cardNumber && (
-                            <p className="mt-1 text-sm text-red-500 flex items-center">
-                              <AlertCircle className="h-3 w-3 mr-1" /> {errors.cardNumber}
-                            </p>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="expiry" className="block text-sm font-medium mb-1">Expiry Date</label>
-                            <Input
-                              id="expiry"
-                              name="expiry"
-                              value={formData.expiry}
-                              onChange={handleExpiryChange}
-                              placeholder="MM/YY"
-                              maxLength={5}
-                              className={`w-full ${errors.expiry ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                            />
-                            {errors.expiry && (
-                              <p className="mt-1 text-sm text-red-500 flex items-center">
-                                <AlertCircle className="h-3 w-3 mr-1" /> {errors.expiry}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <label htmlFor="cvc" className="block text-sm font-medium mb-1">CVC</label>
-                            <Input
-                              id="cvc"
-                              name="cvc"
-                              value={formData.cvc}
-                              onChange={handleInputChange}
-                              placeholder="123"
-                              maxLength={3}
-                              className={`w-full ${errors.cvc ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                            />
-                            {errors.cvc && (
-                              <p className="mt-1 text-sm text-red-500 flex items-center">
-                                <AlertCircle className="h-3 w-3 mr-1" /> {errors.cvc}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <h3 className="font-medium border-b pb-2">Billing Address</h3>
-                        
-                        <div>
-                          <label htmlFor="address" className="block text-sm font-medium mb-1">Street Address</label>
-                          <Input
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            placeholder="123 Main St"
-                            className={`w-full ${errors.address ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                          />
-                          {errors.address && (
-                            <p className="mt-1 text-sm text-red-500 flex items-center">
-                              <AlertCircle className="h-3 w-3 mr-1" /> {errors.address}
-                            </p>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="city" className="block text-sm font-medium mb-1">City</label>
-                            <Input
-                              id="city"
-                              name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
-                              placeholder="New York"
-                              className={`w-full ${errors.city ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                            />
-                            {errors.city && (
-                              <p className="mt-1 text-sm text-red-500 flex items-center">
-                                <AlertCircle className="h-3 w-3 mr-1" /> {errors.city}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <label htmlFor="zipCode" className="block text-sm font-medium mb-1">Zip Code</label>
-                            <Input
-                              id="zipCode"
-                              name="zipCode"
-                              value={formData.zipCode}
-                              onChange={handleInputChange}
-                              placeholder="10001"
-                              className={`w-full ${errors.zipCode ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                            />
-                            {errors.zipCode && (
-                              <p className="mt-1 text-sm text-red-500 flex items-center">
-                                <AlertCircle className="h-3 w-3 mr-1" /> {errors.zipCode}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handlePrevStep}
-                          className="flex-1"
-                        >
-                          Back
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-base"
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? (
-                            <span className="flex items-center">
-                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Processing...
-                            </span>
-                          ) : (
-                            <span>Complete Purchase</span>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      <p className="text-xs text-center text-muted-foreground mt-4">
-                        By completing this purchase, you agree to our <Link to="/terms" className="underline">Terms of Service</Link> and acknowledge our <Link to="/privacy" className="underline">Privacy Policy</Link>.
-                      </p>
-                    </form>
+                    <StripeCheckoutForm
+                      clientSecret={clientSecret}
+                      amount={Math.round(checkoutData.totalPrice * 100)} // Convert to cents
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                      customerInfo={{
+                        name: formData.name,
+                        email: formData.email,
+                      }}
+                    />
+                    
+                    <p className="text-xs text-center text-muted-foreground mt-6">
+                      By completing this purchase, you agree to our <Link to="/terms" className="underline">Terms of Service</Link> and acknowledge our <Link to="/privacy" className="underline">Privacy Policy</Link>.
+                    </p>
                   </>
                 )}
               </div>

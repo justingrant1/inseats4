@@ -3,24 +3,7 @@ import { CalendarClock, MapPin, Star, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-
-export type SeatAvailability = "limited" | "available" | "selling-fast";
-
-export type Event = {
-  id: string;
-  title: string;
-  category: string;
-  date: string;
-  venue: string;
-  location: string;
-  imageUrl: string;
-  minPrice: number;
-  maxPrice: number;
-  isPremium?: boolean;
-  isLastMinute?: boolean;
-  availableSeats?: number; 
-  seatAvailability?: SeatAvailability;
-};
+import { Event, SeatAvailability } from "@/types";
 
 interface EventCardProps {
   event: Event;

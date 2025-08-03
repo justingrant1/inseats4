@@ -20,29 +20,39 @@ const key = stripePublishableKey && stripePublishableKey !== 'your-stripe-publis
 export const stripePromise = loadStripe(key)
 
 // Payment Intent creation helper
-export async function createPaymentIntent(amount: number, currency: string = 'usd'): Promise<{ clientSecret: string } | { error: string }> {
+export async function createPaymentIntent(
+  amount: number, 
+  currency: string = 'usd',
+  metadata: Record<string, string> = {}
+): Promise<{ clientSecret: string; paymentIntentId?: string } | { error: string }> {
   try {
-    // In a real app, this would call your backend to create a payment intent
-    // For now, we'll simulate the response since we don't have a backend set up
-    if (isTestMode) {
-      // Simulate successful creation in test mode
-      const mockClientSecret = `pi_${Math.random().toString(36).substring(2)}_secret_${Math.random().toString(36).substring(2)}`
-      return { clientSecret: mockClientSecret }
-    } else {
-      // In production, this would actually call your backend
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount, currency }),
-      })
-      
-      return await response.json()
+    // Call our Supabase Edge Function to create payment intent
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    const functionUrl = `${supabaseUrl}/functions/v1/create-payment-intent`
+    
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ 
+        amount: formatAmountForStripe(amount, currency), 
+        currency,
+        metadata 
+      }),
+    })
+    
+    const data = await response.json()
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to create payment intent')
     }
+    
+    return data
   } catch (error) {
     console.error('Error creating payment intent:', error)
-    return { error: 'Failed to create payment intent' }
+    return { error: error instanceof Error ? error.message : 'Failed to create payment intent' }
   }
 }
 
