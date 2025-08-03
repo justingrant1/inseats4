@@ -1,206 +1,183 @@
-# InSeats - Electronic Ticket Management System
+# Supabase CLI
 
-InSeats is a modern ticket selling and management platform with robust electronic ticket delivery capabilities.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## Features
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-- Buy and sell tickets for events
-- Electronic ticket delivery via email and mobile wallets
-- QR code/barcode-based ticket validation
-- User account management and ticket history
-- Mobile-optimized design
-- Ticket sharing capabilities
-- Developer API and portal
+This repository contains all the functionality for Supabase CLI.
 
-## Recent Updates
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-### Developer Portal Integration (May 2025)
+## Getting started
 
-The platform now includes a comprehensive Developer Portal for API access management:
+### Install the CLI
 
-- **Developer Applications**: Register and manage third-party applications
-- **API Key Management**: Generate, view, and revoke API keys with specific permissions
-- **Usage Metrics**: Monitor API usage and rate limiting
-- **Subscription Plans**: Manage different tiers of API access
-- **Admin Dashboard**: Dedicated section for administrators to manage developer resources
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
-### Ticket Sharing System (April 2025)
-
-A complete ticket sharing system has been implemented:
-
-- **Multiple Sharing Methods**:
-  - Email sharing with personalized messages
-  - SMS sharing to mobile devices
-  - Shareable links with configurable expiration
-- **Access Control**: Secure sharing with expiration dates and revocation capabilities
-- **Dedicated View**: Mobile-optimized shared ticket view for recipients
-- **Tracking**: View counts and usage statistics for shared tickets
-- **Security**: Row-level security in database to protect ticket data
-
-### Admin Dashboard Enhancements (March 2025)
-
-The administrative interface has been expanded with new capabilities:
-
-- **Ticket Management**: View, validate, and manage tickets across all events
-- **User Management**: Comprehensive tools for managing user accounts and permissions
-- **Event Management**: Enhanced tools for creating and managing events
-- **Analytics**: Improved reporting and analytics dashboard
-- **System Settings**: Centralized configuration management
-- **Developer Portal Access**: New section for managing developer applications and API access
-
-### Electronic Ticket Delivery System (February 2025)
-
-Enhanced ticket delivery features:
-
-- **Electronic Ticket Display**: 
-  - New dedicated page for viewing electronic tickets (`/tickets/:orderId`)
-  - Interactive ticket UI with tabs for details, barcode, and actions
-  - Support for multiple tickets within a single order
-
-- **Delivery Options**:
-  - Email delivery: Send tickets to any email address
-  - Wallet integration: Add tickets to Apple Wallet or Google Pay
-  - Print-ready ticket format
-
-- **Webhook Processing**:
-  - Real-time ticket status updates via webhook events
-  - Support for the following webhook events:
-    - `ticket.delivered`: Ticket successfully delivered
-    - `ticket.delivery_failed`: Delivery failure notification
-    - `ticket.wallet_generated`: Wallet pass generation complete
-    - `ticket.barcode_updated`: New barcode issued for a ticket
-
-- **Notification System**:
-  - In-app notifications for ticket delivery and status changes
-  - Email notifications with delivery updates
-  - Webhook notification processing for external systems
-
-### User Authentication and Profiles (January 2025)
-
-Comprehensive user authentication and profile management:
-
-- **Authentication Flows**:
-  - Email/password registration and login
-  - Social authentication options
-  - Password reset and account recovery
-- **User Profiles**:
-  - Customizable user profiles with preferences
-  - Purchase history and saved payment methods
-  - Email preferences and notification settings
-- **Role-Based Access Control**:
-  - User roles (customer, admin, etc.)
-  - Permission-based feature access
-  - Admin user management tools
-
-## Database Schema Updates
-
-### Ticket Sharing (migration 07)
-- New `ticket_shares` table for tracking shared tickets
-- Secure access controls with row-level security
-- Relationship modeling between users, tickets, and shares
-
-### Webhook Events (migration 05)
-- `webhook_events` table for tracking incoming webhooks
-- Event processing status and history
-- Integration with order and ticket status updates
-
-### Ticket Delivery Enhancements (migration 06)
-- Enhanced ticket tables with delivery status tracking
-- Order webhook logs for audit trail
-- Delivery timestamps and methods
-
-### User Profiles (migration 04)
-- Expanded user profile data model
-- Role-based access control structures
-- User preferences and settings storage
-
-## API Integrations
-
-### TicketNetwork Mercury API (v5)
-- OAuth 2.0 authentication with token management
-- Ticket group retrieval and display
-- Ticket locking mechanism
-- Purchase flow with address collection
-- Error handling for common API issues
-
-### TicketVault API
-- Electronic ticket delivery system
-- QR/barcode generation and validation
-- Wallet pass creation (Apple Wallet, Google Pay)
-- Email delivery tracking
-
-### Developer Portal API
-- Application registration and management
-- API key generation with permission scoping
-- Usage metrics and rate limiting
-- Subscription management
-
-## Technical Stack
-
-- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
-- **APIs**: Stripe (payments), TicketVault (ticket delivery), TicketNetwork (inventory)
-- **Authentication**: Supabase Auth with JWT token management
-- **Real-time Updates**: Supabase Realtime for live notifications
-
-## Development
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Supabase CLI for local development
-
-### Setup
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Copy `.env.example` to `.env` and fill in your credentials
-4. Start the development server: `npm run dev`
-
-### Environment Variables
-Required environment variables:
-```
-# Supabase - Database & Authentication
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-
-# Stripe - Payment Processing
-VITE_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
-
-# TicketNetwork API Configuration
-VITE_TICKETNETWORK_API_KEY=your-ticketnetwork-api-key
-VITE_TICKETNETWORK_CONSUMER_KEY=your-consumer-key
-VITE_TICKETNETWORK_CONSUMER_SECRET=your-consumer-secret
-VITE_TICKETNETWORK_ENVIRONMENT=sandbox
-VITE_TICKETNETWORK_WCID=your-wcid
-VITE_TICKETNETWORK_BID=your-bid
-
-# TicketVault API Configuration
-VITE_TICKETVAULT_API_KEY=your-ticketvault-api-key
-VITE_TICKETVAULT_API_SECRET=your-ticketvault-api-secret
-VITE_TICKETVAULT_ENVIRONMENT=sandbox
-
-# Webhook Configuration
-VITE_WEBHOOK_SECRET=your-webhook-signing-secret
-
-# DevPortal API Configuration
-VITE_DEVPORTAL_API_URL=https://api.devportal.example.com
-VITE_DEVPORTAL_API_KEY=your-devportal-api-key
-VITE_DEVPORTAL_CLIENT_ID=your-client-id
-VITE_DEVPORTAL_CLIENT_SECRET=your-client-secret
+```bash
+npm i supabase --save-dev
 ```
 
-## Deployment
+To install the beta release channel:
 
-The application can be deployed to any static hosting service. The backend is handled by Supabase.
+```bash
+npm i supabase@beta --save-dev
+```
 
-1. Build the production bundle: `npm run build`
-2. Deploy the contents of the `dist` directory
-3. Ensure Edge Functions are deployed: `supabase functions deploy webhooks`
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
-## API Documentation
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
 
-API documentation for developers is available through the Developer Portal. Once logged in as an administrator, navigate to `/admin/devportal` to access the documentation and manage API access.
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
 
-## License
+<details>
+  <summary><b>macOS</b></summary>
 
-Copyright © 2025 InSeats Inc. All rights reserved.
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
+```bash
+supabase bootstrap
+```
+
+Or using npx:
+
+```bash
+npx supabase bootstrap
+```
+
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
+```

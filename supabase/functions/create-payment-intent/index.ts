@@ -25,16 +25,25 @@ serve(async (req) => {
 
     // Parse request body
     const requestBody = await req.json()
-    console.log('Request body:', requestBody)
+    console.log('Request body received:', JSON.stringify(requestBody, null, 2))
     
     const { amount, currency = 'usd', metadata = {} } = requestBody
 
-    console.log('Parsed values:', { amount, currency, metadata })
+    console.log('Parsed values:', { 
+      amount, 
+      amountType: typeof amount,
+      currency, 
+      metadata: JSON.stringify(metadata, null, 2)
+    })
 
     if (!amount || amount <= 0) {
-      console.error('Invalid amount:', amount)
-      throw new Error('Invalid amount')
+      console.error('Invalid amount:', amount, 'Type:', typeof amount)
+      throw new Error(`Invalid amount: ${amount} (type: ${typeof amount})`)
     }
+
+    // Ensure amount is an integer (Stripe requires cents)
+    const stripeAmount = Math.round(Number(amount))
+    console.log('Final Stripe amount:', stripeAmount)
 
     // Create payment intent with Stripe API
     const stripeResponse = await fetch('https://api.stripe.com/v1/payment_intents', {
@@ -44,7 +53,7 @@ serve(async (req) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        amount: amount.toString(),
+        amount: stripeAmount.toString(),
         currency: currency,
         automatic_payment_methods: JSON.stringify({ enabled: true }),
         ...Object.entries(metadata).reduce((acc, [key, value]) => {
