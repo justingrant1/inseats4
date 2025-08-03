@@ -19,32 +19,47 @@ const key = stripePublishableKey && stripePublishableKey !== 'your-stripe-publis
 // Initialize Stripe with the appropriate key
 export const stripePromise = loadStripe(key)
 
-// Payment Intent creation helper
+// Payment Intent creation helper - calls Supabase Edge Function
 export async function createPaymentIntent(
   amount: number, 
   currency: string = 'usd',
   metadata: Record<string, string> = {}
 ): Promise<{ clientSecret: string; paymentIntentId?: string } | { error: string }> {
   try {
-    // For demo purposes, create a mock payment intent
-    // In production, this would call your backend API
     const stripeAmount = formatAmountForStripe(amount, currency)
     
-    // Generate a mock client secret for demo
-    const mockClientSecret = `pi_mock_${Math.random().toString(36).substring(2)}_secret_${Math.random().toString(36).substring(2)}`
-    
-    console.log('Creating mock payment intent for demo:', {
+    console.log('Creating real payment intent:', {
       amount: stripeAmount,
       currency,
       metadata
     })
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Call the Supabase Edge Function to create a real payment intent
+    const response = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: stripeAmount,
+        currency,
+        metadata
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    if (data.error) {
+      throw new Error(data.error)
+    }
     
     return {
-      clientSecret: mockClientSecret,
-      paymentIntentId: `pi_mock_${Math.random().toString(36).substring(2)}`
+      clientSecret: data.clientSecret,
+      paymentIntentId: data.paymentIntentId
     }
   } catch (error) {
     console.error('Error creating payment intent:', error)

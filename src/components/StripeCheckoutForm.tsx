@@ -87,40 +87,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
     setIsProcessing(true);
 
-    // Check if this is a mock payment intent (demo mode)
-    if (clientSecret.startsWith('pi_mock_')) {
-      // Simulate payment processing for demo
-      try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Create a mock successful payment intent
-        const mockPaymentIntent = {
-          id: clientSecret.replace('_secret_', '_').split('_secret_')[0],
-          status: 'succeeded',
-          amount: amount,
-          currency: 'usd',
-          created: Math.floor(Date.now() / 1000),
-          payment_method: {
-            id: `pm_mock_${Math.random().toString(36).substring(2)}`,
-            type: 'card',
-            card: {
-              brand: 'visa',
-              last4: '4242'
-            }
-          }
-        };
-        
-        onSuccess(mockPaymentIntent);
-        return;
-      } catch (err) {
-        onError('Demo payment failed');
-        return;
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-
-    // Real Stripe payment processing
     if (!stripe || !elements) {
       onError('Stripe not loaded');
       setIsProcessing(false);
@@ -136,6 +102,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
 
     try {
+      console.log('Processing real payment with client secret:', clientSecret);
+      
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
@@ -157,6 +125,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         console.error('Payment failed:', error);
         onError(error.message || 'Payment failed');
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        console.log('Payment succeeded:', paymentIntent);
         onSuccess(paymentIntent);
       }
     } catch (err) {
