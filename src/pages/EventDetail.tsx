@@ -143,12 +143,33 @@ const EventDetail = () => {
     title: `${event.title} | InSeats Premium Tickets`,
     description: `Get premium tickets for ${event.title} at ${event.venue}. Find the best seats at the best prices. Secure checkout and instant delivery.`,
     keywords: `${event.title} tickets, ${event.venue} tickets, ${event.category} tickets, buy ${event.title} tickets online`,
-    canonical: `/events/${event.id}`,
-    openGraph: {
-      title: `${event.title} - Premium Tickets`,
-      description: `Get premium tickets for ${event.title} at ${event.venue}. Starting from $${event.minPrice}.`,
-      image: event.imageUrl,
-      type: 'website'
+    canonical: `https://inseats.com/events/${event.id}`,
+    ogTitle: `${event.title} - Premium Tickets`,
+    ogDescription: `Get premium tickets for ${event.title} at ${event.venue}. Starting from $${event.minPrice}.`,
+    ogImage: event.imageUrl,
+    ogUrl: `https://inseats.com/events/${event.id}`,
+    twitterTitle: `${event.title} - Premium Tickets`,
+    twitterDescription: `Get premium tickets for ${event.title} at ${event.venue}. Starting from $${event.minPrice}.`,
+    twitterImage: event.imageUrl,
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": event.title,
+      "startDate": event.date,
+      "location": {
+        "@type": "Place",
+        "name": event.venue,
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": event.location
+        }
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": `https://inseats.com/events/${event.id}`,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      }
     }
   };
 
