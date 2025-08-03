@@ -216,8 +216,8 @@ const PrivacyPolicy = () => {
                       If you have any questions about this privacy policy or our privacy practices, please contact us at:
                     </p>
                     <div className="text-zinc-600">
-                      <p>Email: privacy@inseats.com</p>
-                      <p>Phone: 1-800-INSEATS</p>
+                      <p>Email: sales@inseats.com</p>
+                      <p>Phone: 917-698-0202</p>
                       <p>Address: 123 Premium Ave, Suite 456, Los Angeles, CA 90210</p>
                     </div>
                     <p className="text-zinc-600 leading-relaxed mt-4">

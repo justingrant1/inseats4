@@ -202,11 +202,11 @@ const AboutUs = () => {
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-gold-500" />
-                    <span>hello@inseats.com</span>
+                    <span>sales@inseats.com</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="h-5 w-5 text-gold-500" />
-                    <span>1-800-INSEATS</span>
+                    <span>917-698-0202</span>
                   </div>
                 </div>
                 

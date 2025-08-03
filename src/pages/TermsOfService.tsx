@@ -178,8 +178,8 @@ const TermsOfService = () => {
                       If you have any questions about these Terms of Service, please contact us at:
                     </p>
                     <div className="mt-4 text-zinc-600">
-                      <p>Email: legal@inseats.com</p>
-                      <p>Phone: 1-800-INSEATS</p>
+                      <p>Email: sales@inseats.com</p>
+                      <p>Phone: 917-698-0202</p>
                       <p>Address: 123 Premium Ave, Suite 456, Los Angeles, CA 90210</p>
                     </div>
                   </CardContent>
