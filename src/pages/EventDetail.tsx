@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import { Event, SeatTier, CheckoutState } from "@/types";
 import { useEventDetails } from "@/hooks/useEventDetails";
 import { useScrollToPurchase } from "@/hooks/useScrollToPurchase";
-import { useSEO } from "@/hooks/useSEO";
+// import { useSEO } from "@/hooks/useSEO";
 import {
   Select,
   SelectContent,
@@ -138,42 +138,8 @@ const EventDetail = () => {
 
   const selectedTierData = seatTiers.find(t => t.id === selectedTier);
 
-  // Dynamic SEO for event details - memoized to prevent infinite re-renders
-  const seoData = useMemo(() => ({
-    title: `${event.title} | InSeats Premium Tickets`,
-    description: `Get premium tickets for ${event.title} at ${event.venue}. Find the best seats at the best prices. Secure checkout and instant delivery.`,
-    keywords: `${event.title} tickets, ${event.venue} tickets, ${event.category} tickets, buy ${event.title} tickets online`,
-    canonical: `https://inseats.com/events/${event.id}`,
-    ogTitle: `${event.title} - Premium Tickets`,
-    ogDescription: `Get premium tickets for ${event.title} at ${event.venue}. Starting from $${event.minPrice}.`,
-    ogImage: event.imageUrl,
-    ogUrl: `https://inseats.com/events/${event.id}`,
-    twitterTitle: `${event.title} - Premium Tickets`,
-    twitterDescription: `Get premium tickets for ${event.title} at ${event.venue}. Starting from $${event.minPrice}.`,
-    twitterImage: event.imageUrl,
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "Event",
-      "name": event.title,
-      "startDate": event.date,
-      "location": {
-        "@type": "Place",
-        "name": event.venue,
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": event.location
-        }
-      },
-      "offers": {
-        "@type": "Offer",
-        "url": `https://inseats.com/events/${event.id}`,
-        "priceCurrency": "USD",
-        "availability": "https://schema.org/InStock"
-      }
-    }
-  }), [event.title, event.venue, event.category, event.id, event.minPrice, event.imageUrl, event.date, event.location]);
-
-  useSEO(seoData);
+  // SEO functionality temporarily disabled to fix React error #310
+  // TODO: Re-implement SEO with proper dependency management
 
   return (
     <div className="min-h-screen flex flex-col">
