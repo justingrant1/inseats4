@@ -41,9 +41,10 @@ serve(async (req) => {
       throw new Error(`Invalid amount: ${amount} (type: ${typeof amount})`)
     }
 
-    // Ensure amount is an integer (Stripe requires cents)
+    // The amount is already in cents from the frontend formatAmountForStripe function
+    // Just ensure it's an integer
     const stripeAmount = Math.round(Number(amount))
-    console.log('Final Stripe amount:', stripeAmount)
+    console.log('Final Stripe amount (in cents):', stripeAmount)
 
     // Create payment intent with Stripe API
     const stripeResponse = await fetch('https://api.stripe.com/v1/payment_intents', {
@@ -55,7 +56,7 @@ serve(async (req) => {
       body: new URLSearchParams({
         amount: stripeAmount.toString(),
         currency: currency,
-        automatic_payment_methods: JSON.stringify({ enabled: true }),
+        'automatic_payment_methods[enabled]': 'true',
         ...Object.entries(metadata).reduce((acc, [key, value]) => {
           acc[`metadata[${key}]`] = value as string
           return acc
