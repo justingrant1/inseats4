@@ -16,9 +16,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useSEO, seoConfigs } from "@/hooks/useSEO";
 import GooglePlacesAutocomplete from "@/components/GooglePlacesAutocomplete";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 // Sample event data - in a real app, this would come from an API
 const sampleEvents: Event[] = [
@@ -105,6 +113,8 @@ const Events = () => {
   const [locationQuery, setLocationQuery] = useState(queryParams.get("location") || "");
   const [category, setCategory] = useState(queryParams.get("category") || "all");
   const [dateFilter, setDateFilter] = useState("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(sampleEvents);
   const { location: detectedLocation, isLoading: locationLoading } = useGeolocation();
 
@@ -133,8 +143,43 @@ const Events = () => {
       filtered = filtered.filter(event => event.category === category);
     }
     
+    // Apply date filter
+    if (dateFilter !== "all") {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      filtered = filtered.filter(event => {
+        // Parse event date - assuming format "May 15, 2023 • 7:00 PM"
+        const eventDateStr = event.date.split(" • ")[0];
+        const eventDate = new Date(eventDateStr);
+        
+        switch (dateFilter) {
+          case "today":
+            return eventDate.toDateString() === today.toDateString();
+          case "tomorrow":
+            return eventDate.toDateString() === tomorrow.toDateString();
+          case "this-week":
+            const weekEnd = new Date(today);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            return eventDate >= today && eventDate <= weekEnd;
+          case "this-month":
+            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            return eventDate >= today && eventDate <= monthEnd;
+          case "custom":
+            if (dateRange?.from && dateRange?.to) {
+              return eventDate >= dateRange.from && eventDate <= dateRange.to;
+            }
+            return true;
+          default:
+            return true;
+        }
+      });
+    }
+    
     setFilteredEvents(filtered);
-  }, [searchQuery, category]);
+  }, [searchQuery, category, dateFilter, dateRange]);
   
   // Update URL when filters change
   useEffect(() => {
@@ -245,21 +290,63 @@ const Events = () => {
 
                 {/* Date Filter */}
                 <div className="bg-gray-800 text-white rounded-lg p-4">
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
-                      <div className="flex items-center w-full">
-                        <Calendar className="h-5 w-5 text-orange-400 mr-3" />
-                        <SelectValue placeholder="All Dates" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Dates</SelectItem>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="tomorrow">Tomorrow</SelectItem>
-                      <SelectItem value="this-week">This Week</SelectItem>
-                      <SelectItem value="this-month">This Month</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <div className="flex items-center w-full">
+                      <Calendar className="h-5 w-5 text-orange-400 mr-3" />
+                      <Select 
+                        value={dateFilter} 
+                        onValueChange={(value) => {
+                          if (value === "custom") {
+                            setIsCalendarOpen(true);
+                          } else {
+                            setDateFilter(value);
+                            setDateRange(undefined);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
+                          <SelectValue placeholder="All Dates" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Dates</SelectItem>
+                          <SelectItem value="today">Today</SelectItem>
+                          <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                          <SelectItem value="this-week">This Week</SelectItem>
+                          <SelectItem value="this-month">This Month</SelectItem>
+                          <SelectItem value="custom">Custom...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={(range) => {
+                          setDateRange(range);
+                          if (range?.from && range?.to) {
+                            setDateFilter("custom");
+                            setIsCalendarOpen(false);
+                          }
+                        }}
+                        numberOfMonths={2}
+                        className="rounded-md border"
+                      />
+                      {dateRange?.from && dateRange?.to && (
+                        <div className="p-3 border-t">
+                          <p className="text-sm text-center">
+                            {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                          </p>
+                          <Button 
+                            className="w-full mt-2" 
+                            onClick={() => setIsCalendarOpen(false)}
+                          >
+                            Apply Date Range
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -301,6 +388,8 @@ const Events = () => {
                     onClick={() => {
                       setSearchQuery('');
                       setCategory('all');
+                      setDateFilter('all');
+                      setDateRange(undefined);
                     }}
                   >
                     Clear all filters
