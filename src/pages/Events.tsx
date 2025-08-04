@@ -293,34 +293,44 @@ const Events = () => {
                   <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <div className="flex items-center w-full">
                       <Calendar className="h-5 w-5 text-orange-400 mr-3" />
-                      <Select 
-                        value={dateFilter} 
-                        onValueChange={(value) => {
-                          if (value === "custom") {
-                            setIsCalendarOpen(true);
-                          } else {
-                            setDateFilter(value);
-                            setDateRange(undefined);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
-                          <SelectValue placeholder="All Dates" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Dates</SelectItem>
-                          <SelectItem value="today">Today</SelectItem>
-                          <SelectItem value="tomorrow">Tomorrow</SelectItem>
-                          <SelectItem value="this-week">This Week</SelectItem>
-                          <SelectItem value="this-month">This Month</SelectItem>
-                          <SelectItem value="custom">Custom...</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {dateFilter === "custom" && dateRange?.from && dateRange?.to ? (
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="bg-transparent border-none text-white p-0 h-auto focus:ring-0 hover:bg-transparent justify-start font-normal"
+                          >
+                            {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                          </Button>
+                        </PopoverTrigger>
+                      ) : (
+                        <Select 
+                          value={dateFilter} 
+                          onValueChange={(value) => {
+                            if (value === "custom") {
+                              setIsCalendarOpen(true);
+                            } else {
+                              setDateFilter(value);
+                              setDateRange(undefined);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
+                            <SelectValue placeholder="All Dates" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Dates</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                            <SelectItem value="this-week">This Week</SelectItem>
+                            <SelectItem value="this-month">This Month</SelectItem>
+                            <SelectItem value="custom">Custom...</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                     <PopoverContent className="w-auto p-0" align="start">
                       <CalendarComponent
                         mode="range"
-                        defaultMonth={dateRange?.from}
                         selected={dateRange}
                         onSelect={(range) => {
                           setDateRange(range);
@@ -332,19 +342,26 @@ const Events = () => {
                         numberOfMonths={2}
                         className="rounded-md border"
                       />
-                      {dateRange?.from && dateRange?.to && (
-                        <div className="p-3 border-t">
-                          <p className="text-sm text-center">
-                            {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                          </p>
-                          <Button 
-                            className="w-full mt-2" 
-                            onClick={() => setIsCalendarOpen(false)}
-                          >
-                            Apply Date Range
-                          </Button>
-                        </div>
-                      )}
+                      <div className="p-3 border-t">
+                        <Button 
+                          className="w-full mb-2" 
+                          onClick={() => setIsCalendarOpen(false)}
+                          disabled={!dateRange?.from || !dateRange?.to}
+                        >
+                          Apply Date Range
+                        </Button>
+                        <Button 
+                          className="w-full" 
+                          onClick={() => {
+                            setDateFilter("all");
+                            setDateRange(undefined);
+                            setIsCalendarOpen(false);
+                          }}
+                          variant="outline"
+                        >
+                          Clear Date Range
+                        </Button>
+                      </div>
                     </PopoverContent>
                   </Popover>
                 </div>
