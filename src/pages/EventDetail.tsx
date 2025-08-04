@@ -777,9 +777,9 @@ const EventDetail = () => {
                         </Popover>
                       </div>
                       
-                      {/* Sort controls */}
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
+                      {/* Sort controls - Mobile responsive layout */}
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-sm">
+                        <span className="text-white font-medium">{filteredAndSortedListings.length} LISTINGS</span>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400">SORT:</span>
                           <Select 
