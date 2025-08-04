@@ -523,16 +523,8 @@ const EventDetail = () => {
                 {/* Tiered Seating Details */}
                 {activeView === 'tiers' && (
                   <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="mb-6">
                       <h3 className="font-bold text-xl">Choose Your Seating Tier</h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setActiveView('none')}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        ✕ Close
-                      </Button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -624,26 +616,16 @@ const EventDetail = () => {
                   <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 mb-6">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="font-bold text-xl text-white">Select Your Exact Seat</h3>
-                      <div className="flex items-center gap-2">
-                        {/* Mobile expand button - better placement */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="md:hidden text-gray-400 hover:text-white"
-                          onClick={() => setIsFullScreenView(true)}
-                        >
-                          <Maximize2 className="h-4 w-4 mr-1" />
-                          <span className="text-xs">Expand</span>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setActiveView('none')}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          ✕ Close
-                        </Button>
-                      </div>
+                      {/* Mobile expand button moved to top right */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="md:hidden text-gray-400 hover:text-white"
+                        onClick={() => setIsFullScreenView(true)}
+                      >
+                        <Maximize2 className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Expand</span>
+                      </Button>
                     </div>
                     
                     {/* Enhanced Filter Controls */}
