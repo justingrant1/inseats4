@@ -11,12 +11,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("");
   const [category, setCategory] = useState("all");
   const [showTrending, setShowTrending] = useState(false);
   const navigate = useNavigate();
+  const { location: detectedLocation, isLoading: locationLoading } = useGeolocation();
+
+  // Set detected location as default when available
+  useEffect(() => {
+    if (detectedLocation && !location) {
+      setLocation(detectedLocation);
+    }
+  }, [detectedLocation, location]);
   
   // Popular searches that could be fetched from an API in a real app
   const trendingSearches = [
@@ -63,8 +74,8 @@ const Hero = () => {
             </span>
             
             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
-              Your Ticket to the 
-              <span className="bg-clip-text text-transparent gold-gradient block md:ml-2 md:inline-block">
+              InSeats: Your Ticket to the 
+              <span className="bg-clip-text text-transparent gold-gradient block">
                 Best Views
               </span>
             </h1>
@@ -74,7 +85,7 @@ const Hero = () => {
             </p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-lg max-w-3xl mx-auto animate-fade-in delay-300 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl shadow-lg max-w-4xl mx-auto animate-fade-in delay-300 border border-white/20">
             <form 
               action="https://formspree.io/f/mqaqgwjg"
               method="POST"
@@ -82,11 +93,11 @@ const Hero = () => {
                 e.preventDefault();
                 
                 // Search validation and navigation
-                if (searchQuery.trim() || category !== "all") {
+                if (searchQuery.trim() || location.trim() || category !== "all") {
                   // We'll let Formspree handle the form submission naturally
                   // And navigate to the search results page
                   setTimeout(() => {
-                    navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}&category=${category}`);
+                    navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}&location=${encodeURIComponent(location.trim())}&category=${category}`);
                   }, 300); // Small delay to ensure form submission starts
                 } else {
                   e.preventDefault(); // Prevent form submission if empty search
@@ -94,8 +105,9 @@ const Hero = () => {
               }}
               className="flex flex-col md:flex-row gap-3"
             >
+              {/* Search field */}
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 z-10" />
                 <Input
                   type="text"
                   placeholder="Search events, artists, teams..."
@@ -134,30 +146,31 @@ const Hero = () => {
                 )}
               </div>
               
-              <div className="w-full md:w-48">
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white h-12">
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4 text-gold-500" />
-                      <SelectValue placeholder="Category" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-white/20">
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="concerts">Concerts</SelectItem>
-                    <SelectItem value="sports">Sports</SelectItem>
-                    <SelectItem value="theater">Theater</SelectItem>
-                    <SelectItem value="comedy">Comedy</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Location field */}
+              <div className="flex-1">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 z-10" />
+                  <GooglePlacesAutocomplete
+                    value={location}
+                    onChange={(value) => setLocation(value)}
+                    placeholder={locationLoading ? "Detecting location..." : "Los Angeles, CA"}
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-12"
+                    disabled={locationLoading}
+                  />
+                </div>
               </div>
               
+              {/* Find Seats button */}
               <input type="hidden" name="form_type" value="event_search" />
+              <input type="hidden" name="search_query" value={searchQuery} />
+              <input type="hidden" name="location" value={location} />
+              <input type="hidden" name="category" value={category} />
+              
               <Button 
                 type="submit" 
-                className="bg-gold-500 hover:bg-gold-600 text-black h-12 transition-colors font-medium"
+                className="bg-blue-500 hover:bg-blue-600 text-white h-12 transition-colors font-medium px-8 whitespace-nowrap"
               >
-                <Ticket className="h-4 w-4 mr-2" /> Find Seats
+                Find Seats
               </Button>
             </form>
           </div>

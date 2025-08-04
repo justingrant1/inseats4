@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Filter, Search, Calendar } from "lucide-react";
+import { Filter, Search, Calendar, MapPin, ChevronDown } from "lucide-react";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -23,6 +23,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useSEO, seoConfigs } from "@/hooks/useSEO";
+import GooglePlacesAutocomplete from "@/components/GooglePlacesAutocomplete";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 // Sample event data - in a real app, this would come from an API
 const sampleEvents: Event[] = [
@@ -106,9 +108,18 @@ const Events = () => {
   const queryParams = new URLSearchParams(location.search);
   
   const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "");
+  const [locationQuery, setLocationQuery] = useState(queryParams.get("location") || "");
   const [category, setCategory] = useState(queryParams.get("category") || "all");
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(sampleEvents);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const { location: detectedLocation, isLoading: locationLoading } = useGeolocation();
+
+  // Set detected location as default when available
+  useEffect(() => {
+    if (detectedLocation && !locationQuery) {
+      setLocationQuery(detectedLocation);
+    }
+  }, [detectedLocation, locationQuery]);
   
   // Apply filters when search parameters change
   useEffect(() => {
@@ -172,113 +183,127 @@ const Events = () => {
     <div className="min-h-screen flex flex-col">
         <Header />
         
-        <main className="flex-1 bg-gray-50 pt-20">
-          <div className="container mx-auto px-4 py-8">
-            {/* Search and filters */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-6">
-                {searchQuery 
-                  ? `Search results for "${searchQuery}"` 
-                  : "Browse Events"}
-              </h1>
-              
-              <div className="flex flex-col md:flex-row gap-4">
-                <form onSubmit={handleSearch} className="flex-1">
+        <main className="flex-1 pt-20">
+          {/* Gradient Header Section */}
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 text-white">
+            <div className="container mx-auto px-4 py-8">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div className="flex-1">
+                  <h1 className="text-3xl lg:text-4xl font-bold mb-2">
+                    Browsing Events Near {locationQuery || "Los Angeles, CA"}
+                  </h1>
+                </div>
+                <div className="w-full lg:w-80">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Search events, artists, venues..."
-                      className="pl-10 border-gray-300 focus:border-blue-500 h-12"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <GooglePlacesAutocomplete
+                      value={locationQuery}
+                      onChange={(value) => setLocationQuery(value)}
+                      placeholder={locationLoading ? "Detecting location..." : "Los Angeles, CA"}
+                      className="pl-10 h-12 bg-white/90 backdrop-blur-sm border-white/20 text-gray-900 placeholder:text-gray-500"
+                      disabled={locationLoading}
                     />
                   </div>
-                </form>
-                
-                <div className="flex gap-2 w-full md:w-auto">
-                  <div className="w-full md:w-48">
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="h-12 border-gray-300">
-                        <div className="flex items-center">
-                          <Calendar className="mr-2 h-4 w-4 text-blue-500" />
-                          <SelectValue placeholder="Category" />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="concerts">Concerts</SelectItem>
-                        <SelectItem value="sports">Sports</SelectItem>
-                        <SelectItem value="theater">Theater</SelectItem>
-                        <SelectItem value="comedy">Comedy</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-                    className="md:hidden h-12"
-                  >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                  </Button>
                 </div>
               </div>
             </div>
-            
-            {/* Mobile Filters */}
-            {isMobileFilterOpen && (
-              <div className="md:hidden mb-6">
-                <Accordion type="single" collapsible className="bg-white rounded-lg border shadow-sm">
-                  <AccordionItem value="price">
-                    <AccordionTrigger className="px-4">Price Range</AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      {/* Price range controls would go here */}
-                      <p className="text-muted-foreground">Price filter controls</p>
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="date">
-                    <AccordionTrigger className="px-4">Date</AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      {/* Date filter controls would go here */}
-                      <p className="text-muted-foreground">Date filter controls</p>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+          </div>
+
+          {/* Content Section */}
+          <div className="bg-gray-50 min-h-screen">
+            <div className="container mx-auto px-4 py-8">
+              {/* All Events Title */}
+              <h2 className="text-2xl font-bold mb-6 text-gray-900">All Events</h2>
+              
+              {/* Filter Boxes */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Location Filter */}
+                <div className="bg-gray-800 text-white rounded-lg p-4 flex items-center">
+                  <MapPin className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <GooglePlacesAutocomplete
+                      value={locationQuery}
+                      onChange={(value) => setLocationQuery(value)}
+                      placeholder={locationLoading ? "Detecting location..." : "Los Angeles, CA"}
+                      className="bg-transparent border-none text-white placeholder:text-gray-300 p-0 h-auto focus:ring-0"
+                      disabled={locationLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div className="bg-gray-800 text-white rounded-lg p-4">
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
+                      <div className="flex items-center">
+                        <Calendar className="h-5 w-5 text-orange-400 mr-3" />
+                        <SelectValue placeholder="All Categories" />
+                        <ChevronDown className="h-4 w-4 ml-auto" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="concerts">Concerts</SelectItem>
+                      <SelectItem value="sports">Sports</SelectItem>
+                      <SelectItem value="theater">Theater</SelectItem>
+                      <SelectItem value="comedy">Comedy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Date Filter */}
+                <div className="bg-gray-800 text-white rounded-lg p-4 flex items-center">
+                  <Calendar className="h-5 w-5 text-orange-400 mr-3" />
+                  <span>All Dates</span>
+                  <ChevronDown className="h-4 w-4 ml-auto" />
+                </div>
               </div>
-            )}
-            
-            {/* Results count */}
-            <div className="mb-6">
-              <p className="text-gray-600">
-                Showing {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
-              </p>
-            </div>
-            
-            {/* Results grid */}
-            {filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
+
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder="Search events, artists, venues..."
+                    className="pl-12 h-14 bg-white border-gray-200 text-lg rounded-xl"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-16">
-                <h3 className="text-xl font-semibold mb-2">No events found</h3>
-                <p className="text-gray-600 mb-6">
-                  Try adjusting your search or filters to find more events.
+              
+              {/* Results count */}
+              <div className="mb-6">
+                <p className="text-gray-600">
+                  Showing {filteredEvents.length} events
                 </p>
-                <Button 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setCategory('all');
-                  }}
-                >
-                  Clear all filters
-                </Button>
               </div>
-            )}
+              
+              {/* Results grid */}
+              {filteredEvents.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <h3 className="text-xl font-semibold mb-2">No events found</h3>
+                  <p className="text-gray-600 mb-6">
+                    Try adjusting your search or filters to find more events.
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setCategory('all');
+                    }}
+                  >
+                    Clear all filters
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </main>
         

@@ -1,11 +1,14 @@
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Filter, Ticket } from "lucide-react";
+import { ArrowRight, Filter, Ticket, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import EventCard, { Event, SeatAvailability } from "./EventCard";
+import EventCard from "./EventCard";
+import { Event, SeatAvailability } from "@/types";
 import { Link } from "react-router-dom";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
+import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 // Updated events with future dates and availability information
 const MOCK_EVENTS: Event[] = [
@@ -77,6 +80,15 @@ const FeaturedEvents = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const { location: detectedLocation, isLoading: locationLoading } = useGeolocation();
+
+  // Set detected location as default when available
+  useEffect(() => {
+    if (detectedLocation && !selectedLocation) {
+      setSelectedLocation(detectedLocation);
+    }
+  }, [detectedLocation, selectedLocation]);
 
   useEffect(() => {
     // Simulate API call with a small delay
@@ -140,6 +152,26 @@ const FeaturedEvents = () => {
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
+        </div>
+        
+        {/* Select Your City Section */}
+        <div className="mb-8 bg-gray-50 rounded-xl p-6">
+          <div className="max-w-2xl">
+            <h3 className="text-2xl font-bold mb-2">Select Your City</h3>
+            <p className="text-muted-foreground mb-4">
+              Choose your location to see events near you
+            </p>
+            <div className="relative max-w-md">
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <GooglePlacesAutocomplete
+                value={selectedLocation}
+                onChange={(value) => setSelectedLocation(value)}
+                placeholder={locationLoading ? "Detecting location..." : "Los Angeles, CA"}
+                className="pl-10 h-12 bg-white border-gray-200"
+                disabled={locationLoading}
+              />
+            </div>
+          </div>
         </div>
         
         {/* Category filters */}
