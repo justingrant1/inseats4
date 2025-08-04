@@ -149,16 +149,21 @@ const EventDetail = () => {
     }
   }, [seatListings]);
 
-  // Handle mouse events for slider dragging
+  // Handle mouse and touch events for slider dragging
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const getClientX = (e: MouseEvent | TouchEvent) => {
+      return 'touches' in e ? e.touches[0]?.clientX || 0 : e.clientX;
+    };
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
       if (!isDragging) return;
       
       const sliderElement = document.querySelector('.price-slider-track') as HTMLElement;
       if (!sliderElement) return;
       
       const rect = sliderElement.getBoundingClientRect();
-      const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const clientX = getClientX(e);
+      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       const value = Math.round(actualMinPrice + percent * (actualMaxPrice - actualMinPrice));
       
       if (isDragging === 'min') {
@@ -168,20 +173,30 @@ const EventDetail = () => {
       }
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsDragging(null);
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      // Mouse events
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('mouseup', handleEnd);
+      
+      // Touch events
+      document.addEventListener('touchmove', handleMove, { passive: false });
+      document.addEventListener('touchend', handleEnd);
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      // Mouse events
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      
+      // Touch events
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
     };
-  }, [isDragging]);
+  }, [isDragging, actualMinPrice, actualMaxPrice]);
 
   const handleTierSelect = (tierId: string) => {
     setSelectedTier(tierId);
@@ -633,7 +648,7 @@ const EventDetail = () => {
                                   
                                   {/* Min handle */}
                                   <div 
-                                    className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform" 
+                                    className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform touch-none" 
                                     style={{
                                       left: `${((priceRange.min - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
                                       transform: 'translateX(-50%)'
@@ -642,17 +657,27 @@ const EventDetail = () => {
                                       e.stopPropagation();
                                       setIsDragging('min');
                                     }}
+                                    onTouchStart={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      setIsDragging('min');
+                                    }}
                                   ></div>
                                   
                                   {/* Max handle */}
                                   <div 
-                                    className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform" 
+                                    className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform touch-none" 
                                     style={{
                                       left: `${((priceRange.max - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
                                       transform: 'translateX(-50%)'
                                     }}
                                     onMouseDown={(e) => {
                                       e.stopPropagation();
+                                      setIsDragging('max');
+                                    }}
+                                    onTouchStart={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
                                       setIsDragging('max');
                                     }}
                                   ></div>
