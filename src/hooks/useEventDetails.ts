@@ -104,7 +104,7 @@ const MOCK_SEAT_TIERS: SeatTier[] = [
   {
     id: "vip",
     name: "VIP Premium",
-    description: "Best views with exclusive access to VIP lounge",
+    description: "Seats in the most premium areas, offering the best views closest to the stage or field.",
     price: 450,
     availableSeats: 12,
     color: "bg-amber-500",
@@ -113,7 +113,7 @@ const MOCK_SEAT_TIERS: SeatTier[] = [
   {
     id: "premium",
     name: "Premium",
-    description: "Excellent views close to the stage/field",
+    description: "Lower-level seats offering excellent proximity to the action.",
     price: 250,
     availableSeats: 28,
     color: "bg-purple-500",
@@ -122,7 +122,7 @@ const MOCK_SEAT_TIERS: SeatTier[] = [
   {
     id: "standard",
     name: "Standard",
-    description: "Great views at a reasonable price",
+    description: "Mid-level seating providing solid views of the entire venue.",
     price: 150,
     availableSeats: 64,
     color: "bg-blue-500",
@@ -131,7 +131,7 @@ const MOCK_SEAT_TIERS: SeatTier[] = [
   {
     id: "budget",
     name: "Budget",
-    description: "Enjoy the event at the most affordable price",
+    description: "Upper-level seats for a full view of the event at the best value.",
     price: 85,
     availableSeats: 103,
     color: "bg-green-500",
