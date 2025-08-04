@@ -52,6 +52,26 @@ const Checkout = () => {
     setIsLoading(false);
   }, [location, navigate]);
 
+  // Scroll to customer information on mobile when page loads
+  useEffect(() => {
+    if (!isLoading && checkoutData && window.innerWidth < 1024) {
+      // Small delay to ensure DOM is fully rendered
+      setTimeout(() => {
+        // Try multiple selectors to find the customer information form
+        const customerInfoSection = document.querySelector('.lg\\:col-span-2 .bg-white') ||
+                                   document.querySelector('form') ||
+                                   document.querySelector('.lg\\:col-span-2');
+        
+        if (customerInfoSection) {
+          customerInfoSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 500);
+    }
+  }, [isLoading, checkoutData]);
+
   // Countdown timer for checkout
   useEffect(() => {
     if (timeLeft <= 0) {
