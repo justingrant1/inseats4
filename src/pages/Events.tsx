@@ -229,10 +229,9 @@ const Events = () => {
                 <div className="bg-gray-800 text-white rounded-lg p-4">
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
-                      <div className="flex items-center">
+                      <div className="flex items-center w-full">
                         <Calendar className="h-5 w-5 text-orange-400 mr-3" />
                         <SelectValue placeholder="All Categories" />
-                        <ChevronDown className="h-4 w-4 ml-auto" />
                       </div>
                     </SelectTrigger>
                     <SelectContent>
@@ -249,10 +248,9 @@ const Events = () => {
                 <div className="bg-gray-800 text-white rounded-lg p-4">
                   <Select value={dateFilter} onValueChange={setDateFilter}>
                     <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
-                      <div className="flex items-center">
+                      <div className="flex items-center w-full">
                         <Calendar className="h-5 w-5 text-orange-400 mr-3" />
                         <SelectValue placeholder="All Dates" />
-                        <ChevronDown className="h-4 w-4 ml-auto" />
                       </div>
                     </SelectTrigger>
                     <SelectContent>
