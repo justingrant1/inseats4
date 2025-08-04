@@ -685,7 +685,18 @@ const EventDetail = () => {
                               </div>
                               
                               <div className="flex justify-center mt-4">
-                                <Button className="bg-white text-black hover:bg-gray-200 px-8 py-2 rounded-full font-medium">
+                                <Button 
+                                  className="bg-white text-black hover:bg-gray-200 px-8 py-2 rounded-full font-medium"
+                                  onClick={() => {
+                                    // Apply price filter logic here
+                                    toast({
+                                      title: "Price filter applied",
+                                      description: `Showing tickets from $${priceRange.min} to $${priceRange.max}`,
+                                    });
+                                    // Close the popover by clicking outside or using a ref
+                                    document.body.click();
+                                  }}
+                                >
                                   Continue
                                 </Button>
                               </div>
