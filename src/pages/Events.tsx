@@ -16,12 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useSEO, seoConfigs } from "@/hooks/useSEO";
 import GooglePlacesAutocomplete from "@/components/GooglePlacesAutocomplete";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -110,8 +104,8 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "");
   const [locationQuery, setLocationQuery] = useState(queryParams.get("location") || "");
   const [category, setCategory] = useState(queryParams.get("category") || "all");
+  const [dateFilter, setDateFilter] = useState("all");
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(sampleEvents);
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const { location: detectedLocation, isLoading: locationLoading } = useGeolocation();
 
   // Set detected location as default when available
@@ -252,10 +246,23 @@ const Events = () => {
                 </div>
 
                 {/* Date Filter */}
-                <div className="bg-gray-800 text-white rounded-lg p-4 flex items-center">
-                  <Calendar className="h-5 w-5 text-orange-400 mr-3" />
-                  <span>All Dates</span>
-                  <ChevronDown className="h-4 w-4 ml-auto" />
+                <div className="bg-gray-800 text-white rounded-lg p-4">
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="bg-transparent border-none text-white p-0 h-auto focus:ring-0">
+                      <div className="flex items-center">
+                        <Calendar className="h-5 w-5 text-orange-400 mr-3" />
+                        <SelectValue placeholder="All Dates" />
+                        <ChevronDown className="h-4 w-4 ml-auto" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Dates</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                      <SelectItem value="this-week">This Week</SelectItem>
+                      <SelectItem value="this-month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
