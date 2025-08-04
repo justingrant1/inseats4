@@ -825,14 +825,26 @@ const EventDetail = () => {
                   <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 mb-6">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="font-bold text-xl text-white">Select Your Exact Seat</h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setActiveView('none')}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        ✕ Close
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {/* Mobile expand button - better placement */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="md:hidden text-gray-400 hover:text-white"
+                          onClick={() => setIsFullScreenView(true)}
+                        >
+                          <Maximize2 className="h-4 w-4 mr-1" />
+                          <span className="text-xs">Expand</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setActiveView('none')}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          ✕ Close
+                        </Button>
+                      </div>
                     </div>
                     
                     {/* Enhanced Filter Controls */}
@@ -977,18 +989,7 @@ const EventDetail = () => {
 
                     {/* Listings count and sort */}
                     <div className="flex justify-between items-center mb-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
-                        {/* Mobile expand button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="md:hidden text-gray-400 hover:text-white p-1 h-auto"
-                          onClick={() => setIsFullScreenView(true)}
-                        >
-                          <Maximize2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400">SORT:</span>
                         <Select 
