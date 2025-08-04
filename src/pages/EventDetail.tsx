@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 // Mock event data that would normally come from an API
 const MOCK_EVENTS: Record<string, Event> = {
@@ -124,19 +129,63 @@ const EventDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [mapFocus, setMapFocus] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'none' | 'tiers' | 'seats'>('none');
+  const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
   const navigate = useNavigate();
+
+  // Calculate actual min/max prices from available listings
+  const actualMinPrice = Math.min(...seatListings.map(l => l.price));
+  const actualMaxPrice = Math.max(...seatListings.map(l => l.price));
+  const [priceRange, setPriceRange] = useState({ 
+    min: actualMinPrice, 
+    max: actualMaxPrice 
+  });
+
+  // Update price range when listings change
+  useEffect(() => {
+    if (seatListings.length > 0) {
+      const newMin = Math.min(...seatListings.map(l => l.price));
+      const newMax = Math.max(...seatListings.map(l => l.price));
+      setPriceRange({ min: newMin, max: newMax });
+    }
+  }, [seatListings]);
+
+  // Handle mouse events for slider dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const sliderElement = document.querySelector('.price-slider-track') as HTMLElement;
+      if (!sliderElement) return;
+      
+      const rect = sliderElement.getBoundingClientRect();
+      const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const value = Math.round(actualMinPrice + percent * (actualMaxPrice - actualMinPrice));
+      
+      if (isDragging === 'min') {
+        setPriceRange(prev => ({ ...prev, min: Math.min(value, prev.max - 100) }));
+      } else if (isDragging === 'max') {
+        setPriceRange(prev => ({ ...prev, max: Math.max(value, prev.min + 100) }));
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(null);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   const handleTierSelect = (tierId: string) => {
     setSelectedTier(tierId);
     setMapFocus(tierId);
-    
-    const tier = seatTiers.find(t => t.id === tierId);
-    if (tier) {
-      toast({
-        title: `${tier.name} selected`,
-        description: `${tier.availableSeats} seats available at $${tier.price} each`,
-      });
-    }
     
     // Animate scroll to purchase section on mobile
     if (window.innerWidth < 768) {
@@ -153,31 +202,14 @@ const EventDetail = () => {
 
   const handleListingSelect = (listingId: string) => {
     setSelectedListing(listingId);
-    const listing = seatListings.find(l => l.id === listingId);
-    if (listing) {
-      toast({
-        title: `Selected ${listing.section} ${listing.row}`,
-        description: `${listing.seats} - $${listing.price} each`,
-      });
-    }
   };
 
   const handlePurchase = () => {
     if (!selectedTier) {
-      toast({
-        title: "Please select a seating option",
-        description: "You need to select a seating tier before purchasing tickets",
-        variant: "destructive",
-      });
       return;
     }
 
     const tier = seatTiers.find(t => t.id === selectedTier);
-    
-    toast({
-      title: "Processing your purchase",
-      description: `${quantity} ${tier?.name} tickets at $${tier?.price} each`,
-    });
     
     // Navigate to checkout page with state instead of query parameters
     navigate('/checkout', { 
@@ -194,20 +226,10 @@ const EventDetail = () => {
 
   const handleListingPurchase = () => {
     if (!selectedListing) {
-      toast({
-        title: "Please select a seat listing",
-        description: "You need to select specific seats before purchasing",
-        variant: "destructive",
-      });
       return;
     }
 
     const listing = seatListings.find(l => l.id === selectedListing);
-    
-    toast({
-      title: "Processing your purchase",
-      description: `${listing?.seats} in ${listing?.section} ${listing?.row}`,
-    });
     
     // Navigate to checkout page
     navigate('/checkout', { 
@@ -538,30 +560,114 @@ const EventDetail = () => {
                       </Button>
                     </div>
                     
-                    {/* Filter controls */}
-                    <div className="flex gap-2 mb-4">
-                      <Select defaultValue="2">
-                        <SelectTrigger className="w-32 bg-gray-800 text-white border-gray-700">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 text-white border-gray-700">
-                          <SelectItem value="1">1 TICKET</SelectItem>
-                          <SelectItem value="2">2 TICKETS</SelectItem>
-                          <SelectItem value="3">3 TICKETS</SelectItem>
-                          <SelectItem value="4">4 TICKETS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      
-                      <Select defaultValue="94-25112">
-                        <SelectTrigger className="w-40 bg-gray-800 text-white border-gray-700">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 text-white border-gray-700">
-                          <SelectItem value="94-25112">$ 94 - 25112</SelectItem>
-                          <SelectItem value="94-200">$ 94 - 200</SelectItem>
-                          <SelectItem value="200-500">$ 200 - 500</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {/* Enhanced Filter Controls */}
+                    <div className="space-y-4 mb-6">
+                      {/* Top row - Ticket quantity and price range selectors */}
+                      <div className="flex gap-3">
+                        <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600">
+                          <Users className="h-4 w-4 text-gray-400" />
+                          <Select defaultValue="2">
+                            <SelectTrigger className="w-28 bg-transparent text-white border-none p-0 h-auto">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-800 text-white border-gray-700">
+                              <SelectItem value="1">1 TICKET</SelectItem>
+                              <SelectItem value="2">2 TICKETS</SelectItem>
+                              <SelectItem value="3">3 TICKETS</SelectItem>
+                              <SelectItem value="4">4 TICKETS</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600 cursor-pointer hover:bg-gray-700 transition-colors">
+                              <span className="text-white font-medium">$</span>
+                              <span className="text-white">{actualMinPrice} - {actualMaxPrice}</span>
+                              <ChevronDown className="h-4 w-4 text-gray-400" />
+                            </div>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 p-0 bg-gray-800 border-gray-600" align="start">
+                            <div className="p-4">
+                              <div className="flex justify-between items-center mb-3">
+                                <span className="text-white text-sm font-medium">Price Range</span>
+                                <button className="text-gray-400 hover:text-white text-xs">RESET</button>
+                              </div>
+                              
+                              {/* Functional slider */}
+                              <div className="relative">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-white font-bold text-lg">${priceRange.min}</span>
+                                  <span className="text-white font-bold text-lg">${priceRange.max}</span>
+                                </div>
+                                
+                                {/* Slider track */}
+                                <div 
+                                  className="relative h-2 bg-gray-700 rounded-full cursor-pointer price-slider-track"
+                                  onMouseDown={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const percent = (e.clientX - rect.left) / rect.width;
+                                    const value = Math.round(actualMinPrice + percent * (actualMaxPrice - actualMinPrice));
+                                    
+                                    // Determine which handle is closer
+                                    const minDist = Math.abs(value - priceRange.min);
+                                    const maxDist = Math.abs(value - priceRange.max);
+                                    
+                                    if (minDist < maxDist) {
+                                      setPriceRange(prev => ({ ...prev, min: Math.min(value, prev.max - 100) }));
+                                      setIsDragging('min');
+                                    } else {
+                                      setPriceRange(prev => ({ ...prev, max: Math.max(value, prev.min + 100) }));
+                                      setIsDragging('max');
+                                    }
+                                  }}
+                                >
+                                  {/* Active range */}
+                                  <div 
+                                    className="absolute h-2 bg-white rounded-full" 
+                                    style={{
+                                      left: `${((priceRange.min - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
+                                      width: `${((priceRange.max - priceRange.min) / (actualMaxPrice - actualMinPrice)) * 100}%`
+                                    }}
+                                  ></div>
+                                  
+                                  {/* Min handle */}
+                                  <div 
+                                    className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform" 
+                                    style={{
+                                      left: `${((priceRange.min - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
+                                      transform: 'translateX(-50%)'
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.stopPropagation();
+                                      setIsDragging('min');
+                                    }}
+                                  ></div>
+                                  
+                                  {/* Max handle */}
+                                  <div 
+                                    className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform" 
+                                    style={{
+                                      left: `${((priceRange.max - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
+                                      transform: 'translateX(-50%)'
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.stopPropagation();
+                                      setIsDragging('max');
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex justify-center mt-4">
+                                <Button className="bg-white text-black hover:bg-gray-200 px-8 py-2 rounded-full font-medium">
+                                  Continue
+                                </Button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
 
                     {/* Listings count and sort */}
