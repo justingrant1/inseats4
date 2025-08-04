@@ -23,10 +23,19 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const initializeAutocomplete = async () => {
       try {
+        // Set a timeout to stop loading after 5 seconds
+        const timeout = setTimeout(() => {
+          setIsLoading(false);
+          console.warn('Google Maps API loading timeout - input will work without autocomplete');
+        }, 5000);
+        
+        setLoadingTimeout(timeout);
+
         const loader = new Loader({
           apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
           version: 'weekly',
@@ -34,6 +43,9 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
         });
 
         await loader.load();
+        
+        // Clear timeout since loading succeeded
+        clearTimeout(timeout);
         setIsLoaded(true);
         setIsLoading(false);
 
@@ -55,14 +67,23 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
       } catch (error) {
         console.error('Error loading Google Maps:', error);
         setIsLoading(false);
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
       }
     };
 
-    if (!isLoaded && !isLoading) {
-      setIsLoading(true);
+    if (!isLoaded && isLoading) {
       initializeAutocomplete();
     }
-  }, [onChange, isLoaded, isLoading]);
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
+  }, [onChange, isLoaded, isLoading, loadingTimeout]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
@@ -77,7 +98,7 @@ const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> = ({
         value={value}
         onChange={handleInputChange}
         placeholder={placeholder}
-        disabled={disabled || isLoading}
+        disabled={disabled}
         className={cn("pl-10", className)}
       />
       {isLoading && (

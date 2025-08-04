@@ -153,9 +153,9 @@ const Hero = () => {
                   <GooglePlacesAutocomplete
                     value={location}
                     onChange={(value) => setLocation(value)}
-                    placeholder={locationLoading ? "Detecting location..." : "Los Angeles, CA"}
+                    placeholder={locationLoading ? "Detecting location..." : "Enter city name..."}
                     className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-12"
-                    disabled={locationLoading}
+                    disabled={false}
                   />
                 </div>
               </div>

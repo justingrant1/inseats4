@@ -18,9 +18,19 @@ export const useGeolocation = () => {
 
   useEffect(() => {
     const getCurrentLocation = async () => {
+      // Set a timeout to stop loading after 8 seconds
+      const overallTimeout = setTimeout(() => {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Location detection timed out'
+        }));
+      }, 8000);
+
       try {
         // Check if geolocation is supported
         if (!navigator.geolocation) {
+          clearTimeout(overallTimeout);
           setState(prev => ({
             ...prev,
             isLoading: false,
@@ -35,20 +45,27 @@ export const useGeolocation = () => {
             const { latitude, longitude } = position.coords;
             
             try {
-              // Load Google Maps API
+              // Load Google Maps API with timeout
               const loader = new Loader({
                 apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
                 version: 'weekly',
                 libraries: ['geocoding']
               });
 
-              await loader.load();
+              const loadPromise = loader.load();
+              const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Google Maps API timeout')), 5000);
+              });
+
+              await Promise.race([loadPromise, timeoutPromise]);
 
               // Use Geocoding API to get city name
               const geocoder = new google.maps.Geocoder();
               const latlng = { lat: latitude, lng: longitude };
 
               geocoder.geocode({ location: latlng }, (results, status) => {
+                clearTimeout(overallTimeout);
+                
                 if (status === 'OK' && results && results[0]) {
                   // Find the city component
                   const addressComponents = results[0].address_components;
@@ -81,6 +98,7 @@ export const useGeolocation = () => {
                 }
               });
             } catch (error) {
+              clearTimeout(overallTimeout);
               setState(prev => ({
                 ...prev,
                 isLoading: false,
@@ -89,6 +107,7 @@ export const useGeolocation = () => {
             }
           },
           (error) => {
+            clearTimeout(overallTimeout);
             let errorMessage = 'Unable to retrieve location';
             
             switch (error.code) {
@@ -111,11 +130,12 @@ export const useGeolocation = () => {
           },
           {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 5000, // Reduced from 10 seconds to 5 seconds
             maximumAge: 300000 // 5 minutes
           }
         );
       } catch (error) {
+        clearTimeout(overallTimeout);
         setState(prev => ({
           ...prev,
           isLoading: false,
