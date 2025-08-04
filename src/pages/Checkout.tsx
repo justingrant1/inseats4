@@ -14,7 +14,8 @@ import { createPaymentIntent } from "@/lib/stripe";
 interface CheckoutState {
   eventId: string;
   eventTitle: string;
-  tierName: string;
+  tierName?: string;        // For tier selection
+  seatDetails?: string;     // For seat selection
   tierPrice: number;
   quantity: number;
   totalPrice: number;
@@ -324,7 +325,11 @@ const Checkout = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h3 className="font-medium text-lg">{checkoutData.eventTitle}</h3>
                       <p className="text-muted-foreground text-sm mb-2">
-                        Seating Tier: <span className="font-medium text-foreground">{checkoutData.tierName}</span>
+                        {checkoutData.tierName ? (
+                          <>Seating Tier: <span className="font-medium text-foreground">{checkoutData.tierName}</span></>
+                        ) : (
+                          <>Selected Seats: <span className="font-medium text-foreground">{checkoutData.seatDetails}</span></>
+                        )}
                       </p>
                     </div>
                     
