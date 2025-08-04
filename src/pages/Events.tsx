@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Filter, Search, Calendar, MapPin, ChevronDown } from "lucide-react";
@@ -290,10 +289,10 @@ const Events = () => {
 
                 {/* Date Filter */}
                 <div className="bg-gray-800 text-white rounded-lg p-4">
-                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                    <div className="flex items-center w-full">
-                      <Calendar className="h-5 w-5 text-orange-400 mr-3" />
-                      {dateFilter === "custom" && dateRange?.from && dateRange?.to ? (
+                  <div className="flex items-center w-full">
+                    <Calendar className="h-5 w-5 text-orange-400 mr-3" />
+                    {dateFilter === "custom" && dateRange?.from && dateRange?.to ? (
+                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="ghost"
@@ -302,7 +301,44 @@ const Events = () => {
                             {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
                           </Button>
                         </PopoverTrigger>
-                      ) : (
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="range"
+                            selected={dateRange}
+                            onSelect={(range) => {
+                              setDateRange(range);
+                              if (range?.from && range?.to) {
+                                setDateFilter("custom");
+                                setIsCalendarOpen(false);
+                              }
+                            }}
+                            numberOfMonths={2}
+                            className="rounded-md border"
+                          />
+                          <div className="p-3 border-t">
+                            <Button 
+                              className="w-full mb-2" 
+                              onClick={() => setIsCalendarOpen(false)}
+                              disabled={!dateRange?.from || !dateRange?.to}
+                            >
+                              Apply Date Range
+                            </Button>
+                            <Button 
+                              className="w-full" 
+                              onClick={() => {
+                                setDateFilter("all");
+                                setDateRange(undefined);
+                                setIsCalendarOpen(false);
+                              }}
+                              variant="outline"
+                            >
+                              Clear Date Range
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <Select 
                           value={dateFilter} 
                           onValueChange={(value) => {
@@ -326,44 +362,44 @@ const Events = () => {
                             <SelectItem value="custom">Custom...</SelectItem>
                           </SelectContent>
                         </Select>
-                      )}
-                    </div>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={(range) => {
-                          setDateRange(range);
-                          if (range?.from && range?.to) {
-                            setDateFilter("custom");
-                            setIsCalendarOpen(false);
-                          }
-                        }}
-                        numberOfMonths={2}
-                        className="rounded-md border"
-                      />
-                      <div className="p-3 border-t">
-                        <Button 
-                          className="w-full mb-2" 
-                          onClick={() => setIsCalendarOpen(false)}
-                          disabled={!dateRange?.from || !dateRange?.to}
-                        >
-                          Apply Date Range
-                        </Button>
-                        <Button 
-                          className="w-full" 
-                          onClick={() => {
-                            setDateFilter("all");
-                            setDateRange(undefined);
-                            setIsCalendarOpen(false);
-                          }}
-                          variant="outline"
-                        >
-                          Clear Date Range
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="range"
+                            selected={dateRange}
+                            onSelect={(range) => {
+                              setDateRange(range);
+                              if (range?.from && range?.to) {
+                                setDateFilter("custom");
+                                setIsCalendarOpen(false);
+                              }
+                            }}
+                            numberOfMonths={2}
+                            className="rounded-md border"
+                          />
+                          <div className="p-3 border-t">
+                            <Button 
+                              className="w-full mb-2" 
+                              onClick={() => setIsCalendarOpen(false)}
+                              disabled={!dateRange?.from || !dateRange?.to}
+                            >
+                              Apply Date Range
+                            </Button>
+                            <Button 
+                              className="w-full" 
+                              onClick={() => {
+                                setDateFilter("all");
+                                setDateRange(undefined);
+                                setIsCalendarOpen(false);
+                              }}
+                              variant="outline"
+                            >
+                              Clear Date Range
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
                 </div>
               </div>
 
