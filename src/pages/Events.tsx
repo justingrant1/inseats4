@@ -213,7 +213,6 @@ const Events = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 {/* Location Filter */}
                 <div className="bg-gray-800 text-white rounded-lg p-4 flex items-center">
-                  <MapPin className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <GooglePlacesAutocomplete
                       value={locationQuery}
