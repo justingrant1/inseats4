@@ -814,7 +814,7 @@ const EventDetail = () => {
                     </div>
                     
                     {/* Seat listings */}
-                    <div className="space-y-3 max-h-64 md:max-h-none overflow-y-auto overscroll-contain">
+                    <div className="space-y-3 h-64 md:h-auto md:max-h-none overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
                       {filteredAndSortedListings.map((listing) => {
                         const isSelected = selectedListing === listing.id;
                         
