@@ -257,13 +257,17 @@ const EventDetail = () => {
     setSelectedTier(tierId);
     setMapFocus(tierId);
     
-    // Animate scroll to purchase section on mobile
-    if (window.innerWidth < 768) {
-      const purchaseSection = document.getElementById('purchase-section');
-      if (purchaseSection) {
-        purchaseSection.scrollIntoView({ behavior: 'smooth' });
+    // Scroll to the quantity selection area after a brief delay to allow state update
+    setTimeout(() => {
+      // Find the quantity selection area within the tiered seating section
+      const quantitySection = document.querySelector('.max-w-md.mx-auto');
+      if (quantitySection) {
+        quantitySection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
       }
-    }
+    }, 100);
   };
 
   const handleQuantityChange = (value: string) => {
@@ -666,6 +670,10 @@ const EventDetail = () => {
                               <SelectItem value="2">2 TICKETS</SelectItem>
                               <SelectItem value="3">3 TICKETS</SelectItem>
                               <SelectItem value="4">4 TICKETS</SelectItem>
+                              <SelectItem value="5">5 TICKETS</SelectItem>
+                              <SelectItem value="6">6 TICKETS</SelectItem>
+                              <SelectItem value="7">7 TICKETS</SelectItem>
+                              <SelectItem value="8">8 TICKETS</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -939,6 +947,10 @@ const EventDetail = () => {
                     <SelectItem value="2">2 TICKETS</SelectItem>
                     <SelectItem value="3">3 TICKETS</SelectItem>
                     <SelectItem value="4">4 TICKETS</SelectItem>
+                    <SelectItem value="5">5 TICKETS</SelectItem>
+                    <SelectItem value="6">6 TICKETS</SelectItem>
+                    <SelectItem value="7">7 TICKETS</SelectItem>
+                    <SelectItem value="8">8 TICKETS</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
