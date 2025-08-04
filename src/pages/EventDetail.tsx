@@ -130,6 +130,8 @@ const EventDetail = () => {
   const [mapFocus, setMapFocus] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'none' | 'tiers' | 'seats'>('none');
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
+  const [ticketQuantityFilter, setTicketQuantityFilter] = useState<string>("2");
+  const [sortBy, setSortBy] = useState<string>("low-high");
   const navigate = useNavigate();
 
   // Calculate actual min/max prices from available listings
@@ -581,7 +583,16 @@ const EventDetail = () => {
                       <div className="flex gap-3">
                         <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600">
                           <Users className="h-4 w-4 text-gray-400" />
-                          <Select defaultValue="2">
+                          <Select 
+                            value={ticketQuantityFilter} 
+                            onValueChange={(value) => {
+                              setTicketQuantityFilter(value);
+                              toast({
+                                title: "Filter updated",
+                                description: `Showing listings with ${value} ticket${value === "1" ? "" : "s"}`,
+                              });
+                            }}
+                          >
                             <SelectTrigger className="w-28 bg-transparent text-white border-none p-0 h-auto">
                               <SelectValue />
                             </SelectTrigger>
@@ -711,7 +722,16 @@ const EventDetail = () => {
                       <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400">SORT:</span>
-                        <Select defaultValue="low-high">
+                        <Select 
+                          value={sortBy} 
+                          onValueChange={(value) => {
+                            setSortBy(value);
+                            toast({
+                              title: "Sort updated",
+                              description: `Listings sorted by ${value === "low-high" ? "price (low to high)" : value === "high-low" ? "price (high to low)" : "section"}`,
+                            });
+                          }}
+                        >
                           <SelectTrigger className="w-32 bg-transparent text-white border-gray-600 text-xs">
                             <SelectValue />
                           </SelectTrigger>
