@@ -814,7 +814,7 @@ const EventDetail = () => {
                     </div>
                     
                     {/* Seat listings */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-96 md:max-h-none overflow-y-auto">
                       {filteredAndSortedListings.map((listing) => {
                         const isSelected = selectedListing === listing.id;
                         
