@@ -133,6 +133,7 @@ const EventDetail = () => {
   const [ticketQuantityFilter, setTicketQuantityFilter] = useState<string>("2");
   const [sortBy, setSortBy] = useState<string>("low-high");
   const [isFullScreenView, setIsFullScreenView] = useState(false);
+  const [isPricePopoverOpen, setIsPricePopoverOpen] = useState(false);
   const navigate = useNavigate();
 
   // Calculate actual min/max prices from available listings
@@ -669,7 +670,7 @@ const EventDetail = () => {
                           </Select>
                         </div>
                         
-                        <Popover>
+                        <Popover open={isPricePopoverOpen} onOpenChange={setIsPricePopoverOpen}>
                           <PopoverTrigger asChild>
                             <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600 cursor-pointer hover:bg-gray-700 transition-colors">
                               <span className="text-white font-medium">$</span>
@@ -766,7 +767,7 @@ const EventDetail = () => {
                                       title: "Price filter applied",
                                       description: `Showing tickets from $${priceRange.min} to $${priceRange.max}`,
                                     });
-                                    document.body.click();
+                                    setIsPricePopoverOpen(false);
                                   }}
                                 >
                                   Continue
