@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, ChevronDown } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, ChevronDown, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -132,6 +132,7 @@ const EventDetail = () => {
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
   const [ticketQuantityFilter, setTicketQuantityFilter] = useState<string>("2");
   const [sortBy, setSortBy] = useState<string>("low-high");
+  const [isFullScreenView, setIsFullScreenView] = useState(false);
   const navigate = useNavigate();
 
   // Calculate actual min/max prices from available listings
@@ -282,6 +283,263 @@ const EventDetail = () => {
           </div>
         </main>
         <Footer />
+        
+        {/* Full-Screen Mobile View Overlay */}
+        {isFullScreenView && (
+          <div className="fixed inset-0 z-50 bg-gray-900 md:hidden">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
+              <h3 className="font-bold text-xl text-white">Select Your Exact Seat</h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsFullScreenView(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <Minimize2 className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            {/* Filter Controls */}
+            <div className="p-4 space-y-4 border-b border-gray-700">
+              <div className="flex gap-3">
+                <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600">
+                  <Users className="h-4 w-4 text-gray-400" />
+                  <Select 
+                    value={ticketQuantityFilter} 
+                    onValueChange={(value) => {
+                      setTicketQuantityFilter(value);
+                      toast({
+                        title: "Filter updated",
+                        description: `Showing listings with ${value} ticket${value === "1" ? "" : "s"}`,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-28 bg-transparent text-white border-none p-0 h-auto">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 text-white border-gray-700">
+                      <SelectItem value="1">1 TICKET</SelectItem>
+                      <SelectItem value="2">2 TICKETS</SelectItem>
+                      <SelectItem value="3">3 TICKETS</SelectItem>
+                      <SelectItem value="4">4 TICKETS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600 cursor-pointer hover:bg-gray-700 transition-colors">
+                      <span className="text-white font-medium">$</span>
+                      <span className="text-white">{actualMinPrice} - {actualMaxPrice}</span>
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0 bg-gray-800 border-gray-600" align="start">
+                    <div className="p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-white text-sm font-medium">Price Range</span>
+                        <button className="text-gray-400 hover:text-white text-xs">RESET</button>
+                      </div>
+                      
+                      <div className="relative">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-white font-bold text-lg">${priceRange.min}</span>
+                          <span className="text-white font-bold text-lg">${priceRange.max}</span>
+                        </div>
+                        
+                        <div 
+                          className="relative h-2 bg-gray-700 rounded-full cursor-pointer price-slider-track"
+                          onMouseDown={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const percent = (e.clientX - rect.left) / rect.width;
+                            const value = Math.round(actualMinPrice + percent * (actualMaxPrice - actualMinPrice));
+                            
+                            const minDist = Math.abs(value - priceRange.min);
+                            const maxDist = Math.abs(value - priceRange.max);
+                            
+                            if (minDist < maxDist) {
+                              setPriceRange(prev => ({ ...prev, min: Math.min(value, prev.max - 100) }));
+                              setIsDragging('min');
+                            } else {
+                              setPriceRange(prev => ({ ...prev, max: Math.max(value, prev.min + 100) }));
+                              setIsDragging('max');
+                            }
+                          }}
+                        >
+                          <div 
+                            className="absolute h-2 bg-white rounded-full" 
+                            style={{
+                              left: `${((priceRange.min - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
+                              width: `${((priceRange.max - priceRange.min) / (actualMaxPrice - actualMinPrice)) * 100}%`
+                            }}
+                          ></div>
+                          
+                          <div 
+                            className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform touch-none" 
+                            style={{
+                              left: `${((priceRange.min - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
+                              transform: 'translateX(-50%)'
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setIsDragging('min');
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setIsDragging('min');
+                            }}
+                          ></div>
+                          
+                          <div 
+                            className="absolute w-6 h-6 bg-white rounded-full border-2 border-gray-900 -top-2 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform touch-none" 
+                            style={{
+                              left: `${((priceRange.max - actualMinPrice) / (actualMaxPrice - actualMinPrice)) * 100}%`,
+                              transform: 'translateX(-50%)'
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setIsDragging('max');
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setIsDragging('max');
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-center mt-4">
+                        <Button 
+                          className="bg-white text-black hover:bg-gray-200 px-8 py-2 rounded-full font-medium"
+                          onClick={() => {
+                            toast({
+                              title: "Price filter applied",
+                              description: `Showing tickets from $${priceRange.min} to $${priceRange.max}`,
+                            });
+                            document.body.click();
+                          }}
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              {/* Sort controls */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">SORT:</span>
+                  <Select 
+                    value={sortBy} 
+                    onValueChange={(value) => {
+                      setSortBy(value);
+                      toast({
+                        title: "Sort updated",
+                        description: `Listings sorted by ${value === "low-high" ? "price (low to high)" : value === "high-low" ? "price (high to low)" : "section"}`,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-32 bg-transparent text-white border-gray-600 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 text-white border-gray-700">
+                      <SelectItem value="low-high">LOW TO HIGH</SelectItem>
+                      <SelectItem value="high-low">HIGH TO LOW</SelectItem>
+                      <SelectItem value="section">BY SECTION</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white text-xs">
+                    CLEAR ✕
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Scrollable Listings Area */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-3">
+                {seatListings.map((listing) => {
+                  const isSelected = selectedListing === listing.id;
+                  
+                  return (
+                    <div 
+                      key={listing.id}
+                      className={`bg-gray-800 rounded-lg p-4 cursor-pointer transition-all border ${
+                        isSelected ? 'border-yellow-500 bg-gray-700' : 'border-gray-700 hover:border-gray-600'
+                      }`}
+                      onClick={() => handleListingSelect(listing.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="text-white">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-gray-400 text-sm">Section</span>
+                            <span className="text-gray-400 text-sm">/</span>
+                            <span className="text-gray-400 text-sm">Row</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-lg font-medium">
+                            <span>{listing.section}</span>
+                            <span className="text-gray-400">/</span>
+                            <span>{listing.row}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="text-white text-xl font-bold">${listing.price}</div>
+                          <div className="text-gray-400 text-sm">ea.</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-gray-400 text-sm">{listing.seats}</span>
+                        {listing.section === "316" && (
+                          <Badge variant="secondary" className="bg-gray-600 text-gray-300 text-xs">
+                            🚫 Obstructed View
+                          </Badge>
+                        )}
+                        {listing.isInstantDelivery && listing.section !== "316" && (
+                          <Badge variant="secondary" className="bg-green-700 text-white text-xs">
+                            Instant Delivery
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Purchase Button - Fixed at bottom */}
+            {selectedListing && (
+              <div className="p-4 border-t border-gray-700 bg-gray-900">
+                <div className="mb-3">
+                  <div className="flex justify-between text-sm text-white mb-1">
+                    <span>Selected seats:</span>
+                    <span>{seatListings.find(l => l.id === selectedListing)?.seats}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg text-white">
+                    <span>Total:</span>
+                    <span>
+                      ${((seatListings.find(l => l.id === selectedListing)?.price || 0) * (seatListings.find(l => l.id === selectedListing)?.quantity || 1)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                
+                <Button 
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 text-lg"
+                  onClick={handleListingPurchase}
+                >
+                  Purchase Selected Seats - ${((seatListings.find(l => l.id === selectedListing)?.price || 0) * (seatListings.find(l => l.id === selectedListing)?.quantity || 1)).toFixed(2)}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -719,7 +977,18 @@ const EventDetail = () => {
 
                     {/* Listings count and sort */}
                     <div className="flex justify-between items-center mb-4 text-sm">
-                      <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-medium">{seatListings.length} LISTINGS</span>
+                        {/* Mobile expand button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="md:hidden text-gray-400 hover:text-white p-1 h-auto"
+                          onClick={() => setIsFullScreenView(true)}
+                        >
+                          <Maximize2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400">SORT:</span>
                         <Select 
