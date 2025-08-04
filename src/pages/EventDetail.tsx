@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { ArrowLeft, Calendar, MapPin, Clock, Users, Star, Ticket, ChevronDown, Maximize2, Minimize2 } from "lucide-react";
@@ -136,12 +136,63 @@ const EventDetail = () => {
   const navigate = useNavigate();
 
   // Calculate actual min/max prices from available listings
-  const actualMinPrice = Math.min(...seatListings.map(l => l.price));
-  const actualMaxPrice = Math.max(...seatListings.map(l => l.price));
+  const actualMinPrice = seatListings.length > 0 ? Math.min(...seatListings.map(l => l.price)) : 0;
+  const actualMaxPrice = seatListings.length > 0 ? Math.max(...seatListings.map(l => l.price)) : 1000;
   const [priceRange, setPriceRange] = useState({ 
     min: actualMinPrice, 
     max: actualMaxPrice 
   });
+
+  // Filter and sort listings based on current filters
+  const filteredAndSortedListings = React.useMemo(() => {
+    let filtered = [...seatListings];
+
+    // Filter by ticket quantity
+    filtered = filtered.filter(listing => 
+      listing.quantity === parseInt(ticketQuantityFilter)
+    );
+
+    // Filter by price range
+    filtered = filtered.filter(listing => 
+      listing.price >= priceRange.min && listing.price <= priceRange.max
+    );
+
+    // Sort listings
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'low-high':
+          return a.price - b.price;
+        case 'high-low':
+          return b.price - a.price;
+        case 'section':
+          return a.section.localeCompare(b.section);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [seatListings, ticketQuantityFilter, priceRange, sortBy]);
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setTicketQuantityFilter("2");
+    setSortBy("low-high");
+    setPriceRange({ min: actualMinPrice, max: actualMaxPrice });
+    toast({
+      title: "Filters reset",
+      description: "All filters have been reset to default values",
+    });
+  };
+
+  // Reset price range only
+  const handleResetPriceRange = () => {
+    setPriceRange({ min: actualMinPrice, max: actualMaxPrice });
+    toast({
+      title: "Price range reset",
+      description: `Price range reset to $${actualMinPrice} - $${actualMaxPrice}`,
+    });
+  };
 
   // Update price range when listings change
   useEffect(() => {
@@ -630,7 +681,12 @@ const EventDetail = () => {
                             <div className="p-4">
                               <div className="flex justify-between items-center mb-3">
                                 <span className="text-white text-sm font-medium">Price Range</span>
-                                <button className="text-gray-400 hover:text-white text-xs">RESET</button>
+                                <button 
+                                  className="text-gray-400 hover:text-white text-xs"
+                                  onClick={handleResetPriceRange}
+                                >
+                                  RESET
+                                </button>
                               </div>
                               
                               <div className="relative">
@@ -745,7 +801,12 @@ const EventDetail = () => {
                               <SelectItem value="section">BY SECTION</SelectItem>
                             </SelectContent>
                           </Select>
-                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white text-xs">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-gray-400 hover:text-white text-xs"
+                            onClick={handleResetFilters}
+                          >
                             CLEAR ✕
                           </Button>
                         </div>
@@ -754,7 +815,7 @@ const EventDetail = () => {
                     
                     {/* Seat listings */}
                     <div className="space-y-3">
-                      {seatListings.map((listing) => {
+                      {filteredAndSortedListings.map((listing) => {
                         const isSelected = selectedListing === listing.id;
                         
                         return (
@@ -891,7 +952,12 @@ const EventDetail = () => {
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-white text-sm font-medium">Price Range</span>
-                      <button className="text-gray-400 hover:text-white text-xs">RESET</button>
+                      <button 
+                        className="text-gray-400 hover:text-white text-xs"
+                        onClick={handleResetPriceRange}
+                      >
+                        RESET
+                      </button>
                     </div>
                     
                     <div className="relative">
