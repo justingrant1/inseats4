@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, TicketIcon, ShoppingCart, User, Bell, LogOut } from "lucide-react";
+import { Menu, X, TicketIcon, User, Bell, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
@@ -22,7 +22,6 @@ import {
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -58,11 +57,6 @@ const Header = () => {
     };
   }, []);
 
-  // Mock cart count - in a real app this would come from context or state management
-  useEffect(() => {
-    // Simulate retrieving cart count from localStorage or context
-    setCartCount(Math.floor(Math.random() * 3));
-  }, []);
   
   // Fetch webhook notifications when user is logged in
   useEffect(() => {
@@ -149,39 +143,6 @@ const Header = () => {
             Sell Tickets
           </Link>
           
-          {/* Cart icon with badge */}
-          <div 
-            onClick={() => {
-              if (cartCount > 0) {
-                // Mock checkout data for demonstration
-                const mockCheckoutData = {
-                  eventId: "sample-event-1",
-                  eventTitle: "Sample Event",
-                  tierName: "VIP",
-                  tierPrice: 149.99,
-                  quantity: cartCount,
-                  totalPrice: 149.99 * cartCount * 1.1 // Add 10% service fee
-                };
-                
-                navigate("/checkout", { state: mockCheckoutData });
-              } else {
-                toast({
-                  title: "Your cart is empty",
-                  description: "Browse our events to find tickets",
-                  variant: "default",
-                });
-              }
-            }}
-            className="ml-4 relative cursor-pointer" 
-            aria-label="Shopping cart"
-          >
-            <ShoppingCart className="h-5 w-5 text-foreground hover:text-gold-500" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gold-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </div>
           
           {/* User dropdown */}
           {user ? (
@@ -239,39 +200,7 @@ const Header = () => {
         </nav>
 
         {/* Mobile menu button */}
-        <div className="md:hidden flex items-center gap-4">
-          <div
-            onClick={() => {
-              if (cartCount > 0) {
-                // Mock checkout data for demonstration
-                const mockCheckoutData = {
-                  eventId: "sample-event-1",
-                  eventTitle: "Sample Event",
-                  tierName: "VIP",
-                  tierPrice: 149.99,
-                  quantity: cartCount,
-                  totalPrice: 149.99 * cartCount * 1.1 // Add 10% service fee
-                };
-                
-                navigate("/checkout", { state: mockCheckoutData });
-              } else {
-                toast({
-                  title: "Your cart is empty",
-                  description: "Browse our events to find tickets",
-                  variant: "default",
-                });
-              }
-            }}
-            className="relative cursor-pointer"
-            aria-label="Shopping cart"
-          >
-            <ShoppingCart className="h-5 w-5 text-foreground hover:text-gold-500" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gold-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </div>
+        <div className="md:hidden flex items-center">
           <button
             className="p-2"
             onClick={() => setIsOpen(!isOpen)}
