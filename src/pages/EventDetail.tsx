@@ -642,7 +642,7 @@ const EventDetail = () => {
                     </div>
                     
                     {/* Enhanced Filter Controls */}
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-4 mb-4">
                       {/* Top row - Ticket quantity and price range selectors */}
                       <div className="flex gap-3">
                         <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-4 py-3 border border-gray-600">
@@ -813,55 +813,57 @@ const EventDetail = () => {
                       </div>
                     </div>
                     
-                    {/* Seat listings */}
-                    <div className="space-y-3 h-64 md:h-auto md:max-h-none overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
-                      {filteredAndSortedListings.map((listing) => {
-                        const isSelected = selectedListing === listing.id;
-                        
-                        return (
-                          <div 
-                            key={listing.id}
-                            className={`bg-gray-800 rounded-lg p-4 cursor-pointer transition-all border ${
-                              isSelected ? 'border-yellow-500 bg-gray-700' : 'border-gray-700 hover:border-gray-600'
-                            }`}
-                            onClick={() => handleListingSelect(listing.id)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="text-white">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-gray-400 text-sm">Section</span>
-                                  <span className="text-gray-400 text-sm">/</span>
-                                  <span className="text-gray-400 text-sm">Row</span>
+                    {/* Dedicated Scrollable Container for Seat Listings */}
+                    <div className="bg-gray-800 rounded-lg border border-gray-700 h-64 md:h-auto md:max-h-96">
+                      <div className="h-full overflow-y-auto p-4 space-y-3">
+                        {filteredAndSortedListings.map((listing) => {
+                          const isSelected = selectedListing === listing.id;
+                          
+                          return (
+                            <div 
+                              key={listing.id}
+                              className={`bg-gray-700 rounded-lg p-4 cursor-pointer transition-all border ${
+                                isSelected ? 'border-yellow-500 bg-gray-600' : 'border-gray-600 hover:border-gray-500'
+                              }`}
+                              onClick={() => handleListingSelect(listing.id)}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="text-white">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-gray-400 text-sm">Section</span>
+                                    <span className="text-gray-400 text-sm">/</span>
+                                    <span className="text-gray-400 text-sm">Row</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-lg font-medium">
+                                    <span>{listing.section}</span>
+                                    <span className="text-gray-400">/</span>
+                                    <span>{listing.row}</span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-lg font-medium">
-                                  <span>{listing.section}</span>
-                                  <span className="text-gray-400">/</span>
-                                  <span>{listing.row}</span>
+                                
+                                <div className="text-right">
+                                  <div className="text-white text-xl font-bold">${listing.price}</div>
+                                  <div className="text-gray-400 text-sm">ea.</div>
                                 </div>
                               </div>
                               
-                              <div className="text-right">
-                                <div className="text-white text-xl font-bold">${listing.price}</div>
-                                <div className="text-gray-400 text-sm">ea.</div>
+                              <div className="flex justify-between items-center mt-3">
+                                <span className="text-gray-400 text-sm">{listing.seats}</span>
+                                {listing.section === "316" && (
+                                  <Badge variant="secondary" className="bg-gray-600 text-gray-300 text-xs">
+                                    🚫 Obstructed View
+                                  </Badge>
+                                )}
+                                {listing.isInstantDelivery && listing.section !== "316" && (
+                                  <Badge variant="secondary" className="bg-green-700 text-white text-xs">
+                                    Instant Delivery
+                                  </Badge>
+                                )}
                               </div>
                             </div>
-                            
-                            <div className="flex justify-between items-center mt-3">
-                              <span className="text-gray-400 text-sm">{listing.seats}</span>
-                              {listing.section === "316" && (
-                                <Badge variant="secondary" className="bg-gray-600 text-gray-300 text-xs">
-                                  🚫 Obstructed View
-                                </Badge>
-                              )}
-                              {listing.isInstantDelivery && listing.section !== "316" && (
-                                <Badge variant="secondary" className="bg-green-700 text-white text-xs">
-                                  Instant Delivery
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                     
                     {/* Purchase Button */}
