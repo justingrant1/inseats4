@@ -16,30 +16,106 @@ export const useGeolocation = () => {
     coordinates: null
   });
 
+  // Function to get location from IP address
+  const getLocationFromIP = async () => {
+    try {
+      // Try multiple IP geolocation services for better reliability
+      const services = [
+        'https://ipapi.co/json/',
+        'https://ip-api.com/json/',
+        'https://ipinfo.io/json'
+      ];
+
+      for (const service of services) {
+        try {
+          const response = await fetch(service);
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          
+          // Handle different API response formats
+          let city = '';
+          let region = '';
+          let lat = 0;
+          let lng = 0;
+
+          if (service.includes('ipapi.co')) {
+            city = data.city;
+            region = data.region_code;
+            lat = data.latitude;
+            lng = data.longitude;
+          } else if (service.includes('ip-api.com')) {
+            city = data.city;
+            region = data.region;
+            lat = data.lat;
+            lng = data.lon;
+          } else if (service.includes('ipinfo.io')) {
+            city = data.city;
+            region = data.region;
+            const coords = data.loc?.split(',');
+            if (coords && coords.length === 2) {
+              lat = parseFloat(coords[0]);
+              lng = parseFloat(coords[1]);
+            }
+          }
+
+          if (city && region && lat && lng) {
+            const locationString = `${city}, ${region}`;
+            setState({
+              location: locationString,
+              isLoading: false,
+              error: null,
+              coordinates: { lat, lng }
+            });
+            return true;
+          }
+        } catch (error) {
+          console.warn(`Failed to get location from ${service}:`, error);
+          continue;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.warn('IP geolocation failed:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const getCurrentLocation = async () => {
-      // Set a timeout to stop loading after 8 seconds
-      const overallTimeout = setTimeout(() => {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: 'Location detection timed out'
-        }));
-      }, 8000);
+      // Set a timeout to stop loading after 10 seconds
+      const overallTimeout = setTimeout(async () => {
+        // Try IP-based location as final fallback
+        const ipLocationSuccess = await getLocationFromIP();
+        if (!ipLocationSuccess) {
+          setState(prev => ({
+            ...prev,
+            location: 'Los Angeles, CA', // Ultimate fallback
+            isLoading: false,
+            error: 'Using default location'
+          }));
+        }
+      }, 10000);
 
       try {
         // Check if geolocation is supported
         if (!navigator.geolocation) {
           clearTimeout(overallTimeout);
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            error: 'Geolocation is not supported by this browser'
-          }));
+          // Try IP-based location immediately
+          const ipLocationSuccess = await getLocationFromIP();
+          if (!ipLocationSuccess) {
+            setState(prev => ({
+              ...prev,
+              location: 'Los Angeles, CA',
+              isLoading: false,
+              error: 'Geolocation not supported, using default location'
+            }));
+          }
           return;
         }
 
-        // Get current position
+        // Get current position with shorter timeout
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
@@ -63,7 +139,7 @@ export const useGeolocation = () => {
               const geocoder = new google.maps.Geocoder();
               const latlng = { lat: latitude, lng: longitude };
 
-              geocoder.geocode({ location: latlng }, (results, status) => {
+              geocoder.geocode({ location: latlng }, async (results, status) => {
                 clearTimeout(overallTimeout);
                 
                 if (status === 'OK' && results && results[0]) {
@@ -90,57 +166,78 @@ export const useGeolocation = () => {
                     coordinates: { lat: latitude, lng: longitude }
                   });
                 } else {
-                  setState(prev => ({
-                    ...prev,
-                    isLoading: false,
-                    error: 'Unable to determine location from coordinates'
-                  }));
+                  // Fallback to IP-based location
+                  const ipLocationSuccess = await getLocationFromIP();
+                  if (!ipLocationSuccess) {
+                    setState(prev => ({
+                      ...prev,
+                      location: 'Los Angeles, CA',
+                      isLoading: false,
+                      error: 'Unable to determine location, using default'
+                    }));
+                  }
                 }
               });
             } catch (error) {
               clearTimeout(overallTimeout);
+              // Fallback to IP-based location
+              const ipLocationSuccess = await getLocationFromIP();
+              if (!ipLocationSuccess) {
+                setState(prev => ({
+                  ...prev,
+                  location: 'Los Angeles, CA',
+                  isLoading: false,
+                  error: 'Error loading Google Maps API, using default location'
+                }));
+              }
+            }
+          },
+          async (error) => {
+            clearTimeout(overallTimeout);
+            
+            // Try IP-based location when GPS fails
+            const ipLocationSuccess = await getLocationFromIP();
+            if (!ipLocationSuccess) {
+              let errorMessage = 'Unable to retrieve location, using default';
+              
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMessage = 'Location access denied, using IP-based location';
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMessage = 'GPS unavailable, using IP-based location';
+                  break;
+                case error.TIMEOUT:
+                  errorMessage = 'Location request timed out, using IP-based location';
+                  break;
+              }
+
               setState(prev => ({
                 ...prev,
+                location: 'Los Angeles, CA',
                 isLoading: false,
-                error: 'Error loading Google Maps API'
+                error: errorMessage
               }));
             }
           },
-          (error) => {
-            clearTimeout(overallTimeout);
-            let errorMessage = 'Unable to retrieve location';
-            
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                errorMessage = 'Location access denied by user';
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Location information unavailable';
-                break;
-              case error.TIMEOUT:
-                errorMessage = 'Location request timed out';
-                break;
-            }
-
-            setState(prev => ({
-              ...prev,
-              isLoading: false,
-              error: errorMessage
-            }));
-          },
           {
             enableHighAccuracy: true,
-            timeout: 5000, // Reduced from 10 seconds to 5 seconds
+            timeout: 3000, // Reduced to 3 seconds for faster fallback
             maximumAge: 300000 // 5 minutes
           }
         );
       } catch (error) {
         clearTimeout(overallTimeout);
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: 'Error initializing geolocation'
-        }));
+        // Fallback to IP-based location
+        const ipLocationSuccess = await getLocationFromIP();
+        if (!ipLocationSuccess) {
+          setState(prev => ({
+            ...prev,
+            location: 'Los Angeles, CA',
+            isLoading: false,
+            error: 'Error initializing geolocation, using default location'
+          }));
+        }
       }
     };
 

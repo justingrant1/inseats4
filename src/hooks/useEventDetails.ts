@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { Event, SeatTier, UseEventDetailsReturn } from '@/types';
+import { Event, SeatTier, SeatListing, UseEventDetailsReturn } from '@/types';
+import { getEventDetails, getTicketsForEvent } from '@/lib/ticketnetwork';
+import type { Event as TNEvent, Ticket as TNTicket } from '@/lib/ticketnetwork';
 
 // Mock data that would normally come from an API
 const MOCK_EVENTS: Record<string, Event> = {
@@ -137,20 +139,171 @@ const MOCK_SEAT_TIERS: SeatTier[] = [
   },
 ];
 
-// Simulate API call
-const fetchEventDetails = async (eventId: string): Promise<{ event: Event; seatTiers: SeatTier[] }> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const event = MOCK_EVENTS[eventId];
-  if (!event) {
-    throw new Error(`Event with ID ${eventId} not found`);
-  }
-  
+// Transform TicketNetwork event to our Event type
+const transformTNEventToEvent = (tnEvent: TNEvent): Event => {
   return {
-    event,
-    seatTiers: MOCK_SEAT_TIERS
+    id: tnEvent.id.toString(),
+    title: tnEvent.name,
+    category: tnEvent.category.name,
+    date: new Date(tnEvent.date).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+    venue: tnEvent.venue.name,
+    location: `${tnEvent.venue.city}, ${tnEvent.venue.stateProvince}`,
+    imageUrl: tnEvent.imageUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+    minPrice: tnEvent.minPrice || 0,
+    maxPrice: tnEvent.maxPrice || 0,
+    isPremium: (tnEvent.minPrice || 0) > 200,
+    isLastMinute: false,
+    description: `Experience ${tnEvent.name} at ${tnEvent.venue.name} in ${tnEvent.venue.city}, ${tnEvent.venue.stateProvince}.`
   };
+};
+
+// Transform TicketNetwork tickets to SeatListings
+const transformTNTicketsToSeatListings = (tnTickets: TNTicket[]): SeatListing[] => {
+  return tnTickets.map((ticket, index) => ({
+    id: ticket.id.toString(),
+    section: ticket.sectionName,
+    row: ticket.rowName || 'General Admission',
+    seats: ticket.quantity > 1 ? `${ticket.quantity} seats` : '1 seat',
+    price: ticket.price,
+    quantity: ticket.quantity,
+    seller: `Seller ${Math.floor(Math.random() * 1000)}`,
+    isInstantDelivery: ticket.deliveryMethodList.includes('Mobile') || ticket.deliveryMethodList.includes('Email'),
+    sellerRating: 4.2 + Math.random() * 0.7, // Random rating between 4.2-4.9
+    viewQuality: index % 4 === 0 ? 'Excellent' : index % 3 === 0 ? 'Great' : index % 2 === 0 ? 'Good' : 'Limited',
+    notes: ticket.notes ? [ticket.notes] : [],
+    features: ticket.deliveryMethodList,
+    restrictions: []
+  }));
+};
+
+// Generate seat tiers from tickets
+const generateSeatTiersFromTickets = (tickets: TNTicket[]): SeatTier[] => {
+  const sectionMap = new Map<string, { prices: number[], count: number }>();
+  
+  tickets.forEach(ticket => {
+    const section = ticket.sectionName;
+    if (!sectionMap.has(section)) {
+      sectionMap.set(section, { prices: [], count: 0 });
+    }
+    const sectionData = sectionMap.get(section)!;
+    sectionData.prices.push(ticket.price);
+    sectionData.count += ticket.quantity;
+  });
+
+  const tiers: SeatTier[] = [];
+  const colors = [
+    { color: "bg-amber-500", bgColor: "bg-amber-100" },
+    { color: "bg-purple-500", bgColor: "bg-purple-100" },
+    { color: "bg-blue-500", bgColor: "bg-blue-100" },
+    { color: "bg-green-500", bgColor: "bg-green-100" },
+  ];
+
+  let colorIndex = 0;
+  sectionMap.forEach((data, section) => {
+    const avgPrice = data.prices.reduce((sum, price) => sum + price, 0) / data.prices.length;
+    const colorScheme = colors[colorIndex % colors.length];
+    
+    tiers.push({
+      id: section.toLowerCase().replace(/\s+/g, '-'),
+      name: section,
+      description: `${section} seating with great views`,
+      price: Math.round(avgPrice),
+      availableSeats: data.count,
+      color: colorScheme.color,
+      bgColor: colorScheme.bgColor,
+    });
+    
+    colorIndex++;
+  });
+
+  return tiers.sort((a, b) => b.price - a.price); // Sort by price descending
+};
+
+// Fetch event details and tickets from TicketNetwork API
+const fetchEventDetails = async (eventId: string): Promise<{ event: Event; seatTiers: SeatTier[]; seatListings: SeatListing[] }> => {
+  const eventIdNum = parseInt(eventId);
+  
+  // Try to get real data from TicketNetwork API
+  const [tnEvent, tnTickets] = await Promise.all([
+    getEventDetails(eventIdNum),
+    getTicketsForEvent(eventIdNum)
+  ]);
+
+  if (tnEvent) {
+    // Use real TicketNetwork data
+    const event = transformTNEventToEvent(tnEvent);
+    const seatListings = transformTNTicketsToSeatListings(tnTickets);
+    const seatTiers = generateSeatTiersFromTickets(tnTickets);
+    
+    return { event, seatTiers, seatListings };
+  } else {
+    // Fallback to mock data
+    const event = MOCK_EVENTS[eventId];
+    if (!event) {
+      throw new Error(`Event with ID ${eventId} not found`);
+    }
+    
+    // Generate mock seat listings
+    const mockSeatListings: SeatListing[] = [
+      {
+        id: "1",
+        section: "Floor",
+        row: "A",
+        seats: "1-2",
+        price: 450,
+        quantity: 2,
+        seller: "TicketMaster Pro",
+        isInstantDelivery: true,
+        sellerRating: 4.8,
+        viewQuality: 'Excellent',
+        notes: ["Amazing view!", "Close to stage"],
+        features: ["Mobile Entry", "Instant Download"],
+        restrictions: []
+      },
+      {
+        id: "2",
+        section: "Lower Level",
+        row: "C",
+        seats: "15-16",
+        price: 275,
+        quantity: 2,
+        seller: "StubHub Elite",
+        isInstantDelivery: true,
+        sellerRating: 4.6,
+        viewQuality: 'Great',
+        notes: ["Great seats for the price"],
+        features: ["Mobile Entry"],
+        restrictions: []
+      },
+      {
+        id: "3",
+        section: "Upper Level",
+        row: "M",
+        seats: "8-11",
+        price: 125,
+        quantity: 4,
+        seller: "SeatGeek Plus",
+        isInstantDelivery: false,
+        sellerRating: 4.4,
+        viewQuality: 'Good',
+        notes: [],
+        features: ["Physical Tickets"],
+        restrictions: ["Must be picked up 2 hours before event"]
+      }
+    ];
+    
+    return {
+      event,
+      seatTiers: MOCK_SEAT_TIERS,
+      seatListings: mockSeatListings
+    };
+  }
 };
 
 export const useEventDetails = (eventId: string | undefined): UseEventDetailsReturn => {
@@ -169,6 +322,7 @@ export const useEventDetails = (eventId: string | undefined): UseEventDetailsRet
   return {
     event: data?.event || null,
     seatTiers: data?.seatTiers || [],
+    seatListings: data?.seatListings || [],
     isLoading,
     error: error as Error | null,
   };

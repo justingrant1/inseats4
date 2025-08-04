@@ -9,8 +9,19 @@ export function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Scroll to the top of the page when the route changes
-    window.scrollTo(0, 0);
+    // Use requestAnimationFrame to ensure DOM is ready and painted
+    const scrollToTop = () => {
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'instant' // Use instant to avoid any animation delay
+        });
+      });
+    };
+
+    // Execute immediately for route changes
+    scrollToTop();
   }, [pathname]);
 
   return null;

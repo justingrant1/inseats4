@@ -1,183 +1,264 @@
-# Supabase CLI
+# InSeats - Event Ticketing Platform
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+A modern event ticketing platform built with React, TypeScript, and Supabase, featuring advanced seat selection capabilities and secure payment processing.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## Features
 
-This repository contains all the functionality for Supabase CLI.
+### Core Functionality
+- **Event Discovery**: Browse and search events by category, location, and date
+- **Event Details**: Comprehensive event information with venue details and pricing
+- **Secure Checkout**: Stripe-powered payment processing with PCI compliance
+- **Electronic Tickets**: Digital ticket delivery with QR codes and sharing capabilities
+- **User Profiles**: Account management with order history and preferences
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+### Advanced Seat Selection (New!)
+- **Interactive Seat Maps**: Visual venue layouts with real-time availability
+- **Tier-Based Pricing**: Multiple pricing tiers with detailed seat information
+- **Seat Reservations**: Temporary seat holds during the selection process (15-minute expiration)
+- **Real-Time Updates**: Live availability updates to prevent double bookings
+- **Detailed Seat Info**: Section, row, and seat number with pricing transparency
 
-## Getting started
+### Technical Features
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Performance Optimized**: Code splitting, lazy loading, and caching strategies
+- **SEO Friendly**: Dynamic meta tags and sitemap generation
+- **Error Handling**: Comprehensive error boundaries and user feedback
+- **Type Safety**: Full TypeScript implementation with strict type checking
 
-### Install the CLI
+## Tech Stack
 
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **Tailwind CSS** for styling
+- **Radix UI** for accessible components
+- **React Router** for navigation
+- **React Hook Form** for form management
 
-```bash
-npm i supabase --save-dev
+### Backend
+- **Supabase** for database and authentication
+- **PostgreSQL** for data storage
+- **Edge Functions** for serverless API endpoints
+- **Row Level Security** for data protection
+
+### Payment Processing
+- **Stripe** for secure payment handling
+- **Webhook Integration** for payment confirmations
+- **PCI Compliance** for card data security
+
+### Development Tools
+- **ESLint** for code linting
+- **TypeScript** for type checking
+- **Git** for version control
+- **GitHub Actions** for CI/CD (planned)
+
+## Database Schema
+
+### Core Tables
+- `events` - Event information and metadata
+- `tickets` - Ticket listings with pricing and availability
+- `orders` - Purchase records and order management
+- `profiles` - User account information
+- `webhook_events` - Payment webhook processing
+
+### Seat Selection Tables
+- `reservations` - Temporary seat holds with expiration
+  - Automatic cleanup of expired reservations
+  - User-based reservation tracking
+  - Integration with checkout process
+
+## API Endpoints
+
+### Event Management
+- `GET /events` - List events with filtering
+- `GET /events/:id` - Event details with seat tiers
+- `GET /events/:id/tiers` - Available seat tiers for an event
+
+### Seat Selection
+- `GET /events/:id/tiers/:tierId/seats` - Detailed seat information
+- `POST /reserve-seats` - Reserve selected seats temporarily
+- `DELETE /release-reservations` - Release user's seat reservations
+
+### Payment Processing
+- `POST /create-payment-intent` - Initialize Stripe payment
+- `POST /webhooks` - Handle payment confirmations
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
+- Stripe account
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/justingrant1/inseats4.git
+   cd inseats4
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Fill in your environment variables:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+   STRIPE_SECRET_KEY=your_stripe_secret_key
+   ```
+
+4. **Set up the database**
+   ```bash
+   # Run migrations
+   supabase db reset
+   
+   # Or apply migrations individually
+   supabase migration up
+   ```
+
+5. **Deploy Edge Functions**
+   ```bash
+   supabase functions deploy get-event-tiers
+   supabase functions deploy get-tier-seats
+   supabase functions deploy reserve-seats
+   supabase functions deploy release-reservations
+   supabase functions deploy create-payment-intent
+   supabase functions deploy webhooks
+   ```
+
+6. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+### Development Workflow
+
+1. **Local Development**
+   ```bash
+   # Start Supabase locally
+   supabase start
+   
+   # Start the dev server
+   npm run dev
+   ```
+
+2. **Database Changes**
+   ```bash
+   # Create a new migration
+   supabase migration new migration_name
+   
+   # Apply migrations
+   supabase db reset
+   ```
+
+3. **Function Development**
+   ```bash
+   # Serve functions locally
+   supabase functions serve
+   
+   # Deploy functions
+   supabase functions deploy function_name
+   ```
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # Base UI components (Radix UI)
+│   ├── EventCard.tsx   # Event display components
+│   ├── Header.tsx      # Navigation components
+│   └── ...
+├── pages/              # Route components
+│   ├── EventDetail.tsx # Event details with seat selection
+│   ├── Checkout.tsx    # Payment processing
+│   └── ...
+├── hooks/              # Custom React hooks
+│   ├── useEventDetails.ts
+│   └── ...
+├── lib/                # Utility functions and configurations
+│   ├── supabase.ts     # Supabase client
+│   ├── stripe.ts       # Stripe configuration
+│   └── ...
+├── types/              # TypeScript type definitions
+│   ├── index.ts        # Main types including seat selection
+│   └── database.types.ts
+└── ...
+
+supabase/
+├── functions/          # Edge Functions
+│   ├── get-event-tiers/
+│   ├── get-tier-seats/
+│   ├── reserve-seats/
+│   ├── release-reservations/
+│   └── ...
+└── migrations/         # Database migrations
+    ├── 01_create_events_table.sql
+    ├── 09_create_reservations_table.sql
+    └── ...
 ```
 
-To install the beta release channel:
+## Seat Selection Architecture
 
-```bash
-npm i supabase@beta --save-dev
-```
+### Data Flow
+1. **Event Detail Page** → Fetch available seat tiers
+2. **Tier Selection** → Load detailed seat map for chosen tier
+3. **Seat Selection** → Reserve selected seats temporarily
+4. **Checkout Process** → Complete purchase or release reservations
+5. **Automatic Cleanup** → Expired reservations removed automatically
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+### Key Components
+- **SeatTier**: Pricing tiers with availability information
+- **Seat**: Individual seats with coordinates and pricing
+- **SeatSection**: Venue sections containing multiple seats
+- **Reservation**: Temporary seat holds with expiration times
 
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
+### API Integration
+- Real-time seat availability checking
+- Automatic reservation expiration (15 minutes)
+- Conflict resolution for simultaneous selections
+- Integration with existing checkout flow
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+## Contributing
 
-<details>
-  <summary><b>macOS</b></summary>
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-  Available via [Homebrew](https://brew.sh). To install:
+## License
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
+## Support
 
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
+For support, email support@inseats.com or create an issue in this repository.
 
-<details>
-  <summary><b>Windows</b></summary>
+## Roadmap
 
-  Available via [Scoop](https://scoop.sh). To install:
+### Upcoming Features
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Social media integration
+- [ ] Event organizer portal
+- [ ] Advanced seat selection UI components
+- [ ] 3D venue visualization
+- [ ] Group booking functionality
 
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
-
-```bash
-supabase bootstrap
-```
-
-Or using npx:
-
-```bash
-npx supabase bootstrap
-```
-
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
-```
+### Recent Updates
+- ✅ Seat selection infrastructure (January 2025)
+- ✅ Reservation system with automatic cleanup
+- ✅ Enhanced type system for seat management
+- ✅ API endpoints for seat selection workflow

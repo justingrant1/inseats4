@@ -317,13 +317,8 @@ const Checkout = () => {
                         <span>Quantity:</span>
                         <span>{checkoutData.quantity}</span>
                       </div>
-                      <div className="flex justify-between mb-2 border-t border-dashed border-gray-200 pt-2">
-                        <span>Subtotal:</span>
-                        <span>${(checkoutData.tierPrice * checkoutData.quantity).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between mb-2">
-                        <span>Service Fee:</span>
-                        <span>${(checkoutData.tierPrice * checkoutData.quantity * 0.1).toFixed(2)}</span>
+                      <div className="text-center py-2 border-t border-dashed border-gray-200">
+                        <p className="text-xs text-green-600 font-medium">✓ All-in pricing - No hidden fees!</p>
                       </div>
                     </div>
                     
